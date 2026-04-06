@@ -1,0 +1,109 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Paquetes de diseño y fuentes ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{amsmath, amsfonts, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+
+% Configuración de márgenes
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\onehalfspacing
+
+% Cabecera y Pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Semillero de Aprendizaje por Refuerzo}
+\lhead{\small IA para Trading y Sentimiento}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Título y Autores
+\title{
+    \vspace{-1cm}
+    \textbf{\Large IA y Emociones: Desarrollo de un Agente de Aprendizaje por Refuerzo para el Mercado de Criptomonedas} \\
+    \vspace{0.5cm}
+    \large Universidad Externado de Colombia \\
+    \text{Ciencia de Datos -- Departamento de Matemáticas}
+}
+\author{
+    \textbf{Julian Duarte} \quad \textbf{Julian Jimenez} \\
+    \medskip
+    \small \textit{Tutores:} \\
+    \small Prof. Julián Fernando Sánchez \quad Prof. Juan Carlos Urueña \quad Prof. Camilo Castillo
+}
+\date{Marzo de 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+    Este trabajo presenta la creación de una Inteligencia Artificial (Agente de Aprendizaje por Refuerzo) capaz de operar automáticamente en el mercado de criptomonedas. A diferencia de los modelos tradicionales que solo miran números, nuestra propuesta integra el "estado de ánimo" del mercado (sentimiento colectivo) para tomar mejores decisiones. Este documento explica paso a paso el diseño matemático y lógico detrás de este agente, definiendo cómo percibe el mundo, qué acciones puede tomar y qué beneficios espera obtener.
+\end{abstract}
+
+\section{Problema: Mercado y Datos}
+El desarrollo de este proyecto se centra en optimizar la toma de decisiones en el trading (compra y venta de activos), una tarea compleja debido a la alta volatilidad y el componente emocional de los mercados. Operaremos en el intercambio \textbf{Binance} usando el par \textbf{BNB/USDT} (comprar Binance Coin usando Tether, una "stablecoin" o moneda estable ligada al valor del dólar). 
+
+Para que nuestra IA aprenda, utilizamos dos tipos de información fundamental:
+\begin{itemize}
+    \item \textbf{Datos OHLCV (Precios):} Corresponde a los precios de mercado (Apertura, Máximo, Mínimo, Cierre) y Volumen. Los usamos para calcular el \textbf{retorno logarítmico}: $r_t = \log(P_t/P_{t-1})$.
+    \item \textbf{Sentimiento de Mercado:} Integramos índices que miden si los inversores tienen "Miedo" o "Codicia". Esta variable psicológica es vital en el ecosistema cripto.
+\end{itemize}
+
+\subsection{Alternativas para la Fuente de Sentimiento}
+Para medir este componente emocional, planteamos tres posibles fuentes tecnológicas:
+\begin{enumerate}
+    \item \textbf{Redes Sociales Crudas (X y Reddit):} Análisis directo de publicaciones masivas mediante técnicas de Procesamiento de Lenguaje Natural (NLP).
+    \item \textbf{Comunidades Especializadas (Stocktwits):} Plataforma donde los usuarios etiquetan sus mensajes como alcistas o bajistas de forma explícita.
+    \item \textbf{Índices Agregadores (Crypto Fear \& Greed Index):} Valor diario consolidado basado en múltiples indicadores de mercado y redes sociales.
+\end{enumerate}
+
+\section{Espacio de Estados: ¿Qué observa la IA?}
+El "Estado" es la información que la IA procesa antes de decidir qué acción tomar. Definimos el estado $S_t = (M_t, I_t, Sent_t)$:
+\begin{enumerate}
+    \item \textbf{Régimen de Mercado ($M_t$):} Clasificamos el mercado como alcista (\textbf{U}p) o bajista (\textbf{D}own) mediante $r_t > \theta$.
+    \item \textbf{Inventario ($I_t$):} Indica la posición actual del agente ($0$: sin posición, $1$: largo o con el activo comprado). Operamos en el mercado \textbf{Spot} (intercambio real e inmediato de activos).
+    \item \textbf{Sentimiento de Mercado ($Sent_t$):} Nivel de optimismo o pesimismo colectivo.
+\end{enumerate}
+
+\section{Espacio de Acciones y Admisibilidad}
+El agente elige entre $\mathcal{A} = \{Buy, Sell, Hold\}$. La admisibilidad depende de $I_t$:
+\begin{itemize}
+    \item Si $I_t=0$ (sin activo), puede elegir entre $\{Buy, Hold\}$.
+    \item Si $I_t=1$ (con activo), puede elegir entre $\{Sell, Hold\}$.
+\end{itemize}
+
+\section{Probabilidades de Transición y Estimación}
+Para modelar cómo cambia el mercado, estimamos las probabilidades de transición mediante el **Suavizado de Laplace**, evitando nulidad en eventos no observados:
+\begin{equation}
+    \tilde{\alpha} = \frac{N_{UU} + \kappa}{N_{U \bullet} + 2\kappa}, \quad \tilde{\beta} = \frac{N_{DD} + \kappa}{N_{D \bullet} + 2\kappa}
+\end{equation}
+
+\section{Recompensas: Beneficios y Costos}
+La recompensa $R_{t+1}$ se calcula como la ganancia bruta del precio menos los **costos operativos** ($c$), que incluyen comisiones y el \textbf{Spread} (diferencia de precios de ejecución):
+\begin{equation}
+    R_{t+1} = I_{t+1}r_{t+1} - c|I_{t+1} - I_t|
+\end{equation}
+La recompensa esperada pondera los escenarios futuros del mercado mediante la media condicional $\bar{\mu}(m)$:
+\begin{equation}
+    \bar{\mu}(U) = \alpha \mu_U + (1-\alpha) \mu_D, \quad \bar{\mu}(D) = (1-\beta) \mu_U + \beta \mu_D
+\end{equation}
+
+\section{Metodología de Resolución}
+Para optimizar el comportamiento del agente, aplicamos la **Ecuación de Bellman de Optimalidad**, permitiendo evaluar decisiones no solo por su retorno inmediato, sino por su valor acumulado futuro:
+\begin{equation}
+    v^*(s) = \max_{a} \left[ r(s,a) + \gamma \sum_{s' \in S} P(s'|s,a) v^*(s') \right]
+\end{equation}
+
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
+    \bibitem{sutton} Sutton, R. S., \& Barto, A. G. (2018). \textit{Reinforcement learning: An introduction}. MIT press.
+\end{thebibliography}
+
+\end{document}
