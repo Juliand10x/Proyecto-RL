@@ -1,0 +1,296 @@
+Trading algorítmico en el mercado de
+criptomonedas usando RL
+Julián Sánchez López
+
+Juan Carlos Urueña
+
+Camilo Castillo
+
+Departamento de Matemáticas
+Ciencia de Datos
+Semillero RL
+
+2026
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+1 / 24
+
+Contenido
+
+1
+
+Contexto general
+
+2
+
+El libro de órdenes (LOB)
+
+3
+
+Trading algorítmico
+
+4
+
+Estrategias de trading algorítmico
+
+5
+
+Encuentro de Semilleros
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+2 / 24
+
+¿Qué es el Trading Algorítmico?
+
+El trading algorítmico consiste en utilizar modelos matemáticos y
+programas computacionales para ejecutar operaciones financieras
+automáticamente.
+Analiza datos históricos y en tiempo real.
+Detecta oportunidades de inversión.
+Ejecuta órdenes sin intervención humana.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+3 / 24
+
+Objetivos del Trading Algorítmico
+
+Reducir errores emocionales.
+Ejecutar operaciones a alta velocidad.
+Optimizar costos de transacción.
+Aprovechar ineficiencias del mercado.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+4 / 24
+
+Evolución del Trading Algorítmico
+
+1
+
+Trading manual tradicional.
+
+2
+
+Sistemas automatizados básicos.
+
+3
+
+High Frequency Trading (HFT).
+
+4
+
+Inteligencia artificial y aprendizaje automático.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+5 / 24
+
+Componentes de un Sistema Algorítmico
+
+Fuente de datos financieros.
+Estrategia matemática o estadística.
+Motor de ejecución.
+Gestión del riesgo.
+Infraestructura tecnológica.
+Lenguajes comunes:
+Python, C++, R, MATLAB.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+6 / 24
+
+Estrategias Comunes
+
+Seguimiento de tendencia
+Compra activos alcistas y vende bajistas.
+Arbitraje
+Busca diferencias de precio entre mercados.
+Machine Learning
+Modelos predictivos basados en datos históricos.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+7 / 24
+
+Activos para Trading Algorítmico
+
+Acciones (mercados bursátiles).
+Forex (divisas internacionales).
+Criptomonedas.
+Futuros y derivados.
+Commodities (oro, petróleo, café).
+ETFs e índices bursátiles.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+8 / 24
+
+Forex
+
+Características principales:
+Mercado global descentralizado.
+Opera 24 horas.
+Alta liquidez.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+9 / 24
+
+Criptomonedas
+
+Operación continua (24/7).
+Alta volatilidad.
+Acceso mediante exchanges digitales.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+10 / 24
+
+Derivados y Commodities
+
+Contratos futuros.
+Cobertura financiera.
+Apalancamiento.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+11 / 24
+
+Riesgos del Trading Algorítmico
+
+Sobreajuste del modelo.
+Fallas tecnológicas.
+Latencia en ejecución.
+Eventos extremos del mercado.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+12 / 24
+
+Tecnologías Utilizadas
+
+Inteligencia artificial.
+Big Data.
+Computación en la nube.
+APIs financieras.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+13 / 24
+
+El libro de órdenes I
+
+Bid–ask
+Ticks y volúmenes
+Spread
+Tipos de órdenes
+Precio medio
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+14 / 24
+
+El libro de órdenes II
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+15 / 24
+
+El libro de órdenes III
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+16 / 24
+
+Precios e indicadores I
+
+Figura: Libro de órdenes para BNB
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+17 / 24
+
+Precios e indicadores II
+
+Figura: Precios medios para BNB
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+18 / 24
+
+Precios e indicadores III
+
+Figura: Velas y bandas de Bollinger para BNB
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+19 / 24
+
+Precios e indicadores IV
+
+Figura: RSI para BNB
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+20 / 24
+
+Trading algorítmico I
+Estrategia de trading: plan integral diseñado para alcanzar
+un objetivo (p. ej., rentabilidad ajustada por riesgo).
+Trading algorítmico: implementación de una estrategia
+mediante reglas codificadas en un algoritmo; puede ejecutarse
+manualmente o automatizarse.
+Backtesting: evaluación de una estrategia con datos
+históricos para estimar su desempeño bajo supuestos
+explícitos.
+Trading cuantitativo: uso de modelos matemáticos y
+estadísticos para diseñar y ejecutar estrategias.
+Trading automatizado: automatización del ciclo completo:
+generación de señales, envío de órdenes y ejecución.
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+21 / 24
+
+Estrategias de trading algorítmico I
+
+Figura: Ejemplo de estrategia para BNB
+
+Buy and hold: profit = -0.30
+Strategy: profit = 0.85
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+22 / 24
+
+Encuentro de Semilleros – 17 de abril
+El próximo 17 de abril se realizará el Encuentro de
+Semilleros.
+El semillero de Aprendizaje por Refuerzo participará
+presentando avances en:
+Trading algorítmico.
+Modelos de aprendizaje por refuerzo aplicados a mercados
+financieros.
+Desarrollo de entornos y estrategias cuantitativas.
+
+La idea es que cada equipo lleve posters mostrando:
+Problema que están abordando.
+Metodología y enfoque técnico.
+Resultados preliminares o prototipos.
+
+El itinerario completo aún está por definirse, pero es
+importante participar y avanzar en la preparación del
+material.
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+23 / 24
+
+GRACIAS!!
+
+Julián Sánchez López, Juan Carlos Urueña, Camilo Castillo
+
+24 / 24
+
+

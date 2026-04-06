@@ -1,0 +1,2079 @@
+Modelo de Aprendizaje por Refuerzo para
+Trading en Mercado Spot
+Capítulo 2 — MDP detallado, con ejemplos paso a paso
+Prof. Julián Fernando Sánchez
+Semillero de Aprendizaje por Refuerzo
+Programa de Ciencia de Datos
+Universidad Externado de Colombia
+23 de septiembre de 2025
+
+Índice
+1. Objetivo y mapa del capítulo
+
+2
+
+2. Datos, discretización y construcción del estado
+2.1. Variable de mercado Mt . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2.2. Componente de posición It . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+2
+2
+3
+
+3. Acciones, admisibilidad y dinámica de inventario
+3.1. Acciones . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+3
+3
+
+4. Cómo estimar las probabilidades de transición del mercado
+4.1. Frecuencias relativas (MLE) . . . . . . . . . . . . . . . . . . . . . . . . . . .
+4.2. Suavizado de Laplace (evitar ceros) . . . . . . . . . . . . . . . . . . . . . . .
+
+4
+4
+6
+
+5. Recompensa: P&L neto con costos (retornos no constantes)
+5.1. Recompensa esperada paso a paso . . . . . . . . . . . . . . . . . . . . . . . .
+
+6
+9
+
+6. Transiciones del MDP
+6.1. Forma escalar . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+6.2. Forma matricial por acción . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+13
+13
+13
+
+1
+
+7. Funciones de valor y ecuaciones de Bellman
+7.1. MDP del problema: estados, acciones y dinámica . . . . . . . . . . . . . . .
+7.2. Horizonte finito T : formulación y retroinducción . . . . . . . . . . . . . . . .
+
+15
+15
+16
+
+8. De los datos a la política (horizonte finito T )
+
+22
+
+1.
+
+Objetivo y mapa del capítulo
+
+Construir un modelo de Aprendizaje por Refuerzo (RL) para trading en el mercado spot,
+desde cero y de manera didáctica. Para cada concepto formal mostramos su instanciación en
+el trading y un ejemplo numérico inmediato. Al final, resolvemos un ejemplo completo.
+Diseño del MDP: St = (Mt , It ), acciones (Buy/Sell/Hold) y recompensas con costos.
+Derivación de las probabilidades de transición T desde datos (frecuencias, suavizado de
+Laplace, estimación bayesiana, ventanas móviles, y alternativa HMM).
+Bellman escalar y matricial, con interpretación financiera.
+Pseudocódigo especializado y chequeos de coherencia.
+Ejemplo completo con resolución (iteración de valores y evaluación de una política fija),
+paso a paso.
+
+2.
+
+Datos, discretización y construcción del estado
+
+2.1.
+
+Variable de mercado Mt
+
+Sean precios spot {Pt }t≥0 a intervalo fijo (p. ej., 5 min). Definimos el retorno logarítmico
+rt = log(Pt /Pt−1 ). Construimos el régimen de mercado binario
+
+Mt =
+
+
+
+U,
+
+rt > θ,
+
+
+D,
+
+rt ≤ θ,
+
+con umbral θ (por defecto θ = 0; se puede usar un pequeño sesgo para filtrar ruido).
+Ejemplo 2.1 (Construir Mt desde datos). Suponga 10 retornos:
+(0,004, −0,006, 0,001, 0,002, −0,003, 0,005, −0,004, −0,002, 0,006, 0,003). Con θ = 0: Mt :
+U,D,U,U,D,U,D,D,U,U.
+2
+
+2.2.
+
+Componente de posición It
+
+En mercado spot limitamos el inventario a It ∈ {0, 1}: 0 sin posición, 1 largo unitario. El
+estado total es St = (Mt , It ), por lo que |S| = 4.
+Ejemplo 2.2 (Estados observados (acciones admisibles)). Convención de índices: t = 1, . . . , 10.
+El agente observa Mt ∈ {U, D} y ejecuta At ∈ {Buy, Sell, Hold}. La posición It ∈ {0, 1} se
+actualiza después de At , con I0 = 0 (plano). Regla (solo acciones admisibles):
+
+It =
+
+
+
+
+1,
+
+
+
+
+0,
+
+
+
+
+I
+
+t−1 ,
+
+si At = Buy y It−1 = 0,
+si At = Sell y It−1 = 1,
+si At = Hold.
+
+Dado Mt = (U, D, U, U, D, U, D, D, U, U ), tomamos acciones admisibles: Buy en t = 1, Sell
+en t = 7; las demás son Hold. Entonces:
+Índice t Mt
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+
+U
+D
+U
+U
+D
+U
+D
+D
+U
+U
+
+At
+
+It−1 → It
+
+Buy
+Hold
+Hold
+Hold
+Hold
+Hold
+Sell
+Hold
+Hold
+Hold
+
+0→1
+1→1
+1→1
+1→1
+1→1
+1→1
+1→0
+0→0
+0→0
+0→0
+
+Por tanto,
+It = (1, 1, 1, 1, 1, 1, 0, 0, 0, 0),
+y los estados visitados (Mt , It ) pertenecen a {(U, 0), (D, 0), (U, 1), (D, 1)}.
+
+3.
+
+Acciones, admisibilidad y dinámica de inventario
+
+3.1.
+
+Acciones
+
+Acciones A = {Buy, Sell, Hold}. La admisibilidad depende de It :
+
+3
+
+It
+
+Acciones admisibles
+
+Actualización determinista de It+1
+
+0
+1
+
+Buy, Hold
+Sell, Hold
+
+It+1 = 1 si Buy; It+1 = 0 si Hold
+It+1 = 0 si Sell; It+1 = 1 si Hold
+
+Comentario 3.1 (Causalidad). El inventario cambia solamente por la acción; el mercado Mt
+evoluciona independientemente de It .
+
+4.
+
+Cómo estimar las probabilidades de transición del
+mercado
+Definimos la matriz de transición de la cadena binaria (Mt ):
+
+
+
+
+
+
+
+
+P(U → U ) P(U → D)   α
+1 − α
+=
+.
+T =
+P(D → U ) P(D → D)
+1−β
+β
+Ofrecemos varias rutas para estimar α, β a partir de datos.
+
+4.1.
+
+Frecuencias relativas (MLE)
+
+Consideremos una cadena de Markov de dos estados Mt ∈ {U, D} (por ejemplo, Up y
+Down) con matriz de transición
+
+
+Pr(U → U ) Pr(U → D)
+
+
+
+
+
+
+
+α
+1 − α
+=
+T =
+,
+1−β
+β
+Pr(D → U ) Pr(D → D)
+
+α, β ∈ (0, 1).
+
+Cómo contar. Dada una secuencia observada M1 , . . . , Mn , las transiciones son los pares
+consecutivos (Mt , Mt+1 ) para t = 1, . . . , n − 1. Definimos los conteos:
+NU U = #{t : Mt = U, Mt+1 = U },
+
+NU D = #{t : Mt = U, Mt+1 = D},
+
+NDU = #{t : Mt = D, Mt+1 = U },
+
+NDD = #{t : Mt = D, Mt+1 = D}.
+
+Los totales por fila (estado origen) son
+NU • = NU U + NU D = #{t : Mt = U },
+
+ND• = NDU + NDD = #{t : Mt = D},
+
+y NU U + NU D + NDU + NDD = n − 1.
+
+4
+
+Verosimilitud y MLE. Asumiendo homogeneidad y primer orden, la verosimilitud se
+factoriza por filas:
+L(α, β) = αNU U (1 − α)NU D · β NDD (1 − β)NDU .
+La log-verosimilitud es
+ℓ(α, β) = NU U log α + NU D log(1 − α) + NDD log β + NDU log(1 − β).
+Derivando e igualando a cero se obtienen los estimadores de máxima verosimilitud (MLE):
+α̂ =
+
+NU U
+,
+NU •
+
+β̂ =
+
+NDD
+,
+ND•
+
+es decir, frecuencias relativas por fila (proporción de permanencias desde cada estado).
+Ejemplo 4.1 (Cálculo de MLE paso a paso). Suponga que en 1,000 transiciones se observa:
+NU U = 350,
+
+NU D = 150,
+
+NDU = 200,
+
+NDD = 300,
+
+de modo que NU • = 500, ND• = 500 y NU U + NU D + NDU + NDD = 1000 (consistencia).
+1) Estimación por frecuencias relativas.
+α̂ =
+
+350
+350
+=
+= 0,70,
+350 + 150
+500
+
+β̂ =
+
+300
+300
+=
+= 0,60.
+200 + 300
+500
+
+2) Matriz de transición estimada.
+
+
+
+
+0,70 0,30
+T̂ = 
+,
+0,40 0,60
+
+(cada fila suma 1).
+
+3) Incertidumbre (aprox. normal/Wald). Para una proporción binomial,
+s
+
+EE(α̂) ≈
+
+EE(β̂) ≈
+
+α̂(1 − α̂)
+=
+NU •
+
+v
+u
+u β̂(1 − β̂)
+t
+
+ND•
+
+=
+
+s
+
+0,7 · 0,3
+≈ 0,0205,
+500
+
+s
+
+0,6 · 0,4
+≈ 0,0219.
+500
+
+Un IC del 95 % (Wald) es θ̂ ± 1,96 EE:
+α̂ ∈ [0,660, 0,740],
+
+β̂ ∈ [0,557, 0,643] (redondeado).
+
+5
+
+4) Interpretación. α̂ = 0,70 sugiere persistencia al alza: si hoy está en U , la probabilidad
+de que mañana siga en U es 70 %. β̂ = 0,60 indica persistencia moderada en D. En términos de
+rachas esperadas, E[longitud de racha en U ] ≈ 1/(1 − α̂) ≈ 3,33 y en D ≈ 1/(1 − β̂) ≈ 2,50.
+Buenas prácticas y casos límite.
+Chequeos: (i) NU U + NU D + NDU + NDD = n − 1; (ii) NU • y ND• coinciden con las
+veces que Mt estuvo en U o D (como estado origen); (iii) las filas de T̂ suman 1.
+Denominadores cero: si NU • = 0 (nunca se observó U como origen), α̂ no está
+definido. Una regularización común es el suavizado de Laplace:
+α̃ =
+
+NU U + 1
+,
+NU • + 2
+
+β̃ =
+
+NDD + 1
+.
+ND• + 2
+
+Claridad para estudiantes: “1,000 transiciones” significa 1,000 pares (Mt , Mt+1 ); la
+secuencia de estados tiene entonces n = 1001 observaciones.
+
+4.2.
+
+Suavizado de Laplace (evitar ceros)
+
+Con conteos pequeños, evite probabilidades 0/1 extremas usando pseudoconteos κ > 0:
+α̃ =
+
+NU U + κ
+,
+NU U + NU D + 2κ
+
+β̃ =
+
+NDD + κ
+.
+NDU + NDD + 2κ
+
+Ejemplo 4.2. Si NU U = 2, NU D = 0 y κ = 1, entonces α̃ = (2 + 1)/(2 + 0 + 2) = 3/4 = 0,75
+en lugar de 1.
+
+5.
+
+Recompensa: P&L neto con costos (retornos no constantes)
+
+En este modelo trabajamos en tiempo discreto. Cada paso corresponde a un intervalo
+[t, t+1), que incluye el instante inicial t pero excluye el final t+1. De esta forma, los intervalos
+no se solapan y cubren toda la línea temporal.
+Retorno del intervalo. Definimos rt+1 como el retorno realizado en el tramo [t, t+1).
+Aunque cubre ese intervalo, se indexa con t + 1 porque su cálculo depende del precio de cierre
+Pt+1 (ejemplo: rt+1 = (Pt+1 − Pt )/Pt o rt+1 = log Pt+1 − log Pt ). Por tanto, rt+1 sólo se conoce
+al llegar a t + 1.
+6
+
+Posición. En el instante t el agente observa el estado (Mt , It ) y decide una acción (Buy,
+Sell, Hold). Esta acción fija la posición para todo el intervalo siguiente:
+
+It+1 =
+
+
+
+
+1
+
+
+
+
+si se ejecuta Buy,
+
+t
+
+si se ejecuta Hold.
+
+0
+
+
+
+
+I
+
+si se ejecuta Sell,
+
+Obsérvese que, aunque It+1 denota la posición durante [t, t+1), es conocida ya desde t (pues
+se determina por la acción tomada en t). Es decir: It+1 es predecible dado It y la acción.
+Distribuciones condicionales del retorno. El retorno del tramo depende del régimen
+de mercado al cierre, Mt+1 ∈ {U, D}. Formalmente:
+rt+1 | (Mt+1 = U ) ∼ FU ,
+
+E[rt+1 | Mt+1 = U ] = µU ,
+
+Var(rt+1 | U ) = σU2 ,
+
+rt+1 | (Mt+1 = D) ∼ FD ,
+
+E[rt+1 | Mt+1 = D] = µD ,
+
+2
+Var(rt+1 | D) = σD
+.
+
+Aquí FU y FD pueden ser distribuciones normales, t de Student, o incluso distribuciones
+empíricas calibradas con datos. Lo importante es que las medias y varianzas difieren según el
+régimen, capturando la asimetría de retornos en días alcistas o bajistas.
+Recompensa del paso. El P&L incremental en el tramo [t, t+1) es
+Rt+1 = It+1 rt+1 − c |It+1 − It |,
+donde:
+It+1 rt+1 es la ganancia/pérdida del activo durante el intervalo, que sólo se obtiene si se
+está largo (It+1 = 1).
+El término c |It+1 − It | es el costo de transacción incurrido si se cambió la posición (Buy
+o Sell); incluye comisión, spread y slippage.
+Ejemplo ilustrativo (log-retorno). Supongamos Pt = 100 y Pt+1 = 101,2. El retorno
+logarítmico es
+
+
+rt+1 = ln 101,2
+≈ ln(1,012) ≈ 0,01193 = 1,193 %.
+100
+Caso 1 (Buy desde plano). El agente estaba plano (It = 0) y ejecuta Buy, con lo
+cual It+1 = 1. Entonces
+Rt+1 = 1 · 0,01193 − c.
+7
+
+Con c = 0,002 (0.20 %), el P&L neto es 0,00993 ≈ +0,993 %.
+Caso 2 (Hold manteniendo largo). El agente ya estaba largo (It = 1) y ejecuta
+Hold, por lo que It+1 = 1 y no hay costo. En este caso
+Rt+1 = 1 · 0,01193 = +1,193 %.
+Caso 3 (Sell cerrando largo). El agente estaba largo (It = 1) y ejecuta Sell, de
+modo que It+1 = 0. No participa del retorno y paga el costo:
+Rt+1 = 0 · 0,01193 − 0,002 = −0,20 %.
+Resumen.
+rt+1 indexa el retorno del próximo paso, medido con Pt+1 , aunque corresponda al
+intervalo [t, t+1).
+It+1 indexa la posición durante el próximo tramo, ya fijada en t por la acción.
+La distribución de rt+1 depende del régimen Mt+1 : alcista (FU ) o bajista (FD ).
+La recompensa Rt+1 combina el P&L por exposición más el costo de cambiar inventario.
+Interpretación financiera. Convención temporal: la acción en t fija la posición It+1 para
+el intervalo [t, t + 1); el retorno del paso es rt+1 . Con costo por cambio c > 0, el P&L es
+Rt+1 = It+1 rt+1 − c |It+1 − It |.
+Casos relevantes:
+Buy desde plano (It = 0 → It+1 = 1): pagas costo y participas del retorno.
+rt+1 − c.
+
+Rt+1 =
+
+Sell cerrando largo (It = 1 → It+1 = 0): pagas costo y no participas del retorno en
+este paso. Rt+1 = −c.
+Hold manteniendo largo (It = 1 → It+1 = 1): no hay costo, participas del retorno.
+Rt+1 = rt+1 .
+Hold manteniéndose plano (It = 0 → It+1 = 0): no hay costo ni participación.
+Rt+1 = 0.
+8
+
+5.1.
+
+Recompensa esperada paso a paso
+
+Hasta ahora hemos definido la recompensa realizada en el paso como
+Rt+1 = It+1 rt+1 − c |It+1 − It |,
+donde It ∈ {0, 1} es la posición al inicio de t, rt+1 es el retorno durante [t, t + 1) y c > 0 es el
+costo por cambiar inventario.
+Nuestro objetivo es calcular la recompensa esperada
+r((m, i), a) = E[Rt+1 | Mt = m, It = i, acción a],
+es decir, el valor promedio de Rt+1 condicionando en:
+El régimen actual del mercado m ∈ {U, D}.
+La posición actual i ∈ {0, 1} (plano o largo).
+La acción elegida a ∈ {Buy, Sell, Hold}.
+Paso 1. Nueva posición tras la acción. La acción determina la posición futura mediante
+una función f (i, a):
+f (i, a) =
+
+
+
+
+1
+
+
+
+
+si a = Buy,
+
+0
+
+
+
+
+i
+
+si a = Sell,
+si a = Hold.
+
+Así, It+1 = f (i, a) y el costo de transacción será c |f (i, a) − i|.
+Paso 2. Dependencia del régimen futuro. El retorno rt+1 depende del régimen del
+mercado en t + 1, denotado Mt+1 :
+E[rt+1 | Mt+1 = U ] = µU ,
+
+E[rt+1 | Mt+1 = D] = µD .
+
+Paso 3. Probabilidades de transición de regímenes. Desde el régimen actual m, la
+probabilidad de pasar al siguiente m′ ∈ {U, D} está dada por la matriz de transición
+T (m, m′ ) = Pr(Mt+1 = m′ | Mt = m).
+
+9
+
+Paso 4. Esperanza total. En este paso queremos calcular la recompensa esperada al tomar
+una acción a en el estado actual (m, i) en el tiempo t. Recordemos que la recompensa de un
+paso es
+Rt+1 = f (i, a) rt+1 − c |f (i, a) − i|,
+donde f (i, a) fija la posición durante el tramo [t, t + 1), el término rt+1 es el retorno
+realizado en ese tramo, y c |f (i, a) − i| es el costo fijo si hubo cambio de inventario.
+Idea clave. En el instante t todavía no sabemos cuál será el régimen al final del tramo
+(Mt+1 ), pero sí conocemos su distribución condicional dado el régimen actual Mt = m. Por
+tanto, el retorno rt+1 es una variable aleatoria cuya media depende del evento {Mt+1 = m′ },
+y la recompensa esperada debe construirse ponderando sobre los posibles escenarios futuros
+m′ ∈ {U, D}.
+Ley de la esperanza total. Si una variable aleatoria X depende de qué suceso Ak
+ocurra, y esos sucesos forman una partición, entonces
+E[X] =
+
+X
+
+Pr(Ak ) E[X | Ak ].
+
+k
+
+En nuestro caso:
+La variable aleatoria es el P&L Rt+1 .
+Los sucesos que forman la partición son AU = {Mt+1 = U } y AD = {Mt+1 = D}.
+Las probabilidades asociadas son Pr(Mt+1 = m′ | Mt = m) = T (m, m′ ), que dependen
+del régimen actual m.
+Aplicación concreta. Condicionando en el estado (m, i) y acción a, se tiene
+r((m, i), a) = E[Rt+1 | Mt = m, It = i, a].
+Usando la ley de la esperanza total sobre los escenarios Mt+1 = m′ :
+
+r((m, i), a) =
+
+X
+
+Pr(Mt+1 = m′ | Mt = m) E[Rt+1 | Mt+1 = m′ , Mt = m, It = i, a]. (1)
+
+m′ ∈{U,D}
+
+Descomposición dentro de cada escenario. El término de costo −c |f (i, a) − i| es
+determinista dado (i, a) y no depende de m′ . La única parte aleatoria es rt+1 , cuya esperanza
+10
+
+bajo cada régimen es
+E[rt+1 | Mt+1 = U ] = µU ,
+
+E[rt+1 | Mt+1 = D] = µD .
+
+Así, en cada escenario m′ :
+E[Rt+1 | Mt+1 = m′ , Mt = m, i, a] = f (i, a) µm′ − c |f (i, a) − i|.
+Sustituyendo en la fórmula de esperanza total:
+
+r((m, i), a) =
+
+X
+
+
+
+
+
+T (m, m′ ) f (i, a) µm′ − c |f (i, a) − i| .
+
+(2)
+
+m′ ∈{U,D}
+
+Interpretación. La recompensa esperada en (m, i) al tomar a es un promedio ponderado de
+las recompensas esperadas en cada escenario futuro m′ , ponderado por las probabilidades de
+transición T (m, m′ ). El costo por cambiar inventario aparece en todos los escenarios porque
+se paga al inicio del tramo, independientemente de cuál régimen ocurra al final.
+Paso 5. Simplificación. Como el costo no depende de m′ , la suma afecta solo al primer
+término:
+
+
+
+
+r((m, i), a) = f (i, a) T (m, U )µU + T (m, D)µD − c |f (i, a) − i|.
+
+(3)
+
+Definimos la media condicional del retorno desde el régimen m como
+µ̄(m) = T (m, U )µU + T (m, D)µD ,
+y la expresión queda más compacta:
+r((m, i), a) = f (i, a) µ̄(m) − c |f (i, a) − i|.
+Paso 6. Caso binario estándar. Con dos parámetros de persistencia α, β la matriz es
+T (U, U ) = α,
+
+T (U, D) = 1 − α,
+
+T (D, U ) = 1 − β,
+
+T (D, D) = β.
+
+Entonces
+µ̄(U ) = α µU + (1 − α) µD ,
+
+µ̄(D) = (1 − β) µU + β µD .
+
+11
+
+Ejemplo 5.1 (Cómputo de r(s, a) con unidades decimales). Suponga α = 0,7, β = 0,6,
+µU = 0,006, µD = −0,010 y costo c = 0,002. Entonces
+µ̄(D) = 0,4·0,006+0,6·(−0,010) = −0,0036.
+
+µ̄(U ) = 0,7·0,006+0,3·(−0,010) = 0,0012,
+Recompensas esperadas:
+r((U, 0), Buy) = 1 · 0,0012 − 0,002 = −0,0008,
+
+r((U, 0), Hold) = 0 · 0,0012 − 0 =
+
+r((U, 1), Hold) = 1 · 0,0012 − 0 =
+
+r((U, 1), Sell) = 0 · 0,0012 − 0,002 = −0,0020,
+
+0,0012,
+
+0,0000,
+
+r((D, 0), Buy) = 1 · (−0,0036) − 0,002 = −0,0056, r((D, 1), Hold) = 1 · (−0,0036) − 0 = −0,0036,
+r((D, 1), Sell) = 0 · (−0,0036) − 0,002 = −0,0020.
+(Opcional) Dispersión de la recompensa. La varianza condicional también se puede
+calcular de forma cerrada:
+2
+
+Var(Rt+1 | m, i, a) = f (i, a)
+
+
+
+2
+T (m, U )σU2 + T (m, D)σD
++ T (m, U )T (m, D)(µU − µD )2
+
+
+
+,
+
+lo cual resulta útil para estudiar criterios de riesgo–retorno.
+(Cierre) Matrices de recompensas por acción. Sea el orden de estados [(U, 0), (U, 1), (D, 0), (D, 1)].
+Recordando r((m, i), a) = f (i, a) µ̄(m) − c |f (i, a) − i|, con
+µ̄(U ) = α µU + (1 − α) µD ,
+
+µ̄(D) = (1 − β) µU + β µD ,
+
+podemos apilar las recompensas esperadas en vectores por acción:
+
+
+
+
+µ̄(U ) − c 
+
+
+
+
+ n/a 
+
+
+rBuy = 
+,
+µ̄(D) − c
+
+
+
+
+
+n/a
+
+
+
+
+
+
+
+
+
+ −c 
+
+
+rSell = 
+,
+n/a
+
+
+
+
+
+rHold = 
+
+n/a
+
+
+
+
+0 
+
+
+
+ µ̄(U ) 
+
+
+
+
+
+
+−c
+
+.
+
+0 
+
+
+µ̄(D)
+
+
+
+Para visualizarlas juntas, construimos la matriz de recompensas estado–acción
+Buy
+
+
+(U, 0)  µ̄(U ) − c
+
+(U, 1) 
+n/a
+
+R =
+
+(D, 0) 
+µ̄(D) − c
+
+(D, 1)
+n/a
+12
+
+Sell
+
+Hold
+
+n/a
+−c
+n/a
+−c
+
+0 
+
+µ̄(U ) 
+.
+
+0 
+
+µ̄(D)
+
+
+
+Uso computacional. Para resolver Bellman de optimalidad con un máximo componente a
+componente, es habitual enmascarar acciones inadmisibles asignándoles −∞ (o un número
+muy negativo) en lugar de “n/a”. Defina entonces
+
+R̃(s, a) =
+
+
+
+r(s, a),
+
+si a es admisible en s,
+
+
+−∞,
+
+si a es inadmisible en s,
+
+y utilice R̃ en v∗ = máxa { ra + γPa v∗ }.
+
+6.
+
+Transiciones del MDP
+
+6.1.
+
+Forma escalar
+
+Para s = (m, i) y acción a:
+
+
+
+
+P (m′ , i′ ) | (m, i), a = T (m, m′ ) 1{i′ = f (i, a)}.
+
+6.2.
+
+Forma matricial por acción
+
+Para representar el problema como un proceso de decisión de Markov (MDP), numeramos
+los estados de la forma siguiente:
+1 : (U, 0),
+
+2 : (U, 1),
+
+3 : (D, 0),
+
+4 : (D, 1).
+
+Cada matriz Pa describe las probabilidades de transición de estados cuando se elige la
+acción a ∈ {Buy, Sell, Hold}. Las filas corresponden al estado de origen (1–4) y las columnas
+al estado de destino (1–4). Si una fila resulta nula, significa que la acción a es inadmisible en
+ese estado (por ejemplo, intentar Buy cuando ya se está largo).
+Acción Buy. Al comprar desde una posición plana (i = 0), se pasa a la misma fila de
+régimen pero con i = 1. Si ya se está largo (i = 1), la acción no es admisible (filas nulas).
+(U, 0) (U, 1) (D, 0) (D, 1)
+
+
+(U, 0) 
+
+(U, 1) 
+
+PBuy =
+
+(D, 0) 
+
+(D, 1)
+
+0
+0
+0
+0
+
+α
+0
+1−β
+0
+
+13
+
+0
+0
+0
+0
+
+
+
+1−α
+
+0 
+.
+
+β 
+
+0
+
+Acción Sell. Al vender desde una posición larga (i = 1), se pasa al mismo régimen futuro
+pero con i = 0. Si se está plano (i = 0), la acción es inadmisible (filas nulas).
+(U, 0) (U, 1) (D, 0) (D, 1)
+
+
+(U, 0)  0
+
+(U, 1) 
+α
+
+PSell =
+
+(D, 0) 
+0
+
+(D, 1) 1 − β
+
+0
+0
+0
+0
+
+0
+1−α
+0
+β
+
+0
+0
+0
+0
+
+
+
+
+
+.
+
+
+
+
+Acción Hold. Al mantener, el agente conserva su inventario. Si está plano permanece en
+i = 0, y si está largo permanece en i = 1. Todas las filas son válidas.
+(U, 0) (U, 1) (D, 0) (D, 1)
+
+
+(U, 0)  α
+
+(U, 1) 
+0
+
+PHold =
+
+(D, 0) 
+1−β
+
+(D, 1)
+0
+
+0
+α
+0
+1−β
+
+1−α
+0
+β
+0
+
+
+
+0 
+
+1−α
+.
+
+0 
+
+β
+
+Interpretación. Las filas corresponden al estado de origen y las columnas al estado de
+destino. Cada entrada da la probabilidad de pasar del estado fila al estado columna al elegir
+la acción indicada. Por ejemplo, en PBuy , la entrada en la fila (U, 0) y columna (U, 1) es α, lo
+que significa: si hoy estás en régimen U sin posición y decides comprar, mañana permanecerás
+en U y estarás largo con probabilidad α.
+Observación. El bloque superior (filas 1 y 2) corresponde a estar actualmente en régimen
+U , mientras que el bloque inferior (filas 3 y 4) corresponde a estar en régimen D. En cada
+caso, la probabilidad de transición al siguiente régimen está gobernada por α (persistencia en
+U ) y β (persistencia en D).
+
+14
+
+7.
+
+Funciones de valor y ecuaciones de Bellman
+
+7.1.
+
+MDP del problema: estados, acciones y dinámica
+
+Espacio de estados. Trabajamos con cuatro estados s = (m, i) que combinan régimen
+m ∈ {U, D} e inventario i ∈ {0, 1}:
+
+S = {(U, 0), (U, 1), (D, 0), (D, 1)}
+
+⇐⇒
+
+1 : (U, 0),
+2 : (U, 1),
+3 : (D, 0),
+4 : (D, 1).
+
+Acciones admisibles por estado.
+A(U, 0) = {Buy, Hold},
+
+A(U, 1) = {Sell, Hold},
+
+A(D, 0) = {Buy, Hold},
+
+A(D, 1) = {Sell, Hold}.
+
+(Comprar ya estando largo o vender ya estando plano son inadmisibles.)
+Transiciones del régimen e inventario. El régimen sigue una cadena de dos estados con
+T (U, U ) = α,
+
+T (U, D) = 1 − α,
+
+T (D, U ) = 1 − β,
+
+T (D, D) = β,
+
+mientras que el inventario para el siguiente paso se fija con
+f (i, Buy) = 1,
+
+f (i, Sell) = 0,
+
+f (i, Hold) = i.
+
+Esto induce, para cada acción a, una matriz Pa ∈ R4×4 de probabilidades P (s′ | s, a) (ver
+sección de “forma matricial por acción”).
+Recompensa inmediata esperada. La recompensa (P&L) del paso [t, t+1) es Rt+1 =
+It+1 rt+1 − c |It+1 − It |. Su esperanza condicional es
+r(s, a) = f (i, a) µ̄(m) − c |f (i, a) − i|,
+
+donde µ̄(m) = T (m, U )µU + T (m, D)µD .
+
+Para acciones inadmisibles, no definimos r(s, a) (equivalentemente, puede considerarse −∞
+para enmascarar en máximos).
+
+15
+
+7.2.
+
+Horizonte finito T : formulación y retroinducción
+
+Línea de tiempo y episodios. El proceso de decisión se desarrolla a lo largo de un
+horizonte discreto de longitud finita T ∈ N, con tiempos t = 0, 1, . . . , T . En cada paso t < T ,
+el agente observa el estado St , elige una acción At dentro del conjunto de acciones admisibles
+A(St ), recibe una recompensa Rt+1 correspondiente al intervalo [t, t + 1), y el sistema transita
+al nuevo estado St+1 .
+Condición terminal. Al final del episodio (t = T ), puede definirse un pago terminal
+G(ST ), que representa una recompensa adicional o penalización por la condición final del
+sistema. En problemas sin recompensa terminal, se asume G ≡ 0.
+Políticas dependientes del tiempo. Una política π con horizonte finito es una secuencia
+−1
+π = {πt }Tt=0
+donde cada πt es una familia de distribuciones de probabilidad sobre A(s):
+X
+
+πt (a | s) ≥ 0,
+
+πt (a | s) = 1.
+
+a∈A(s)
+
+La política puede ser estocástica (mezcla probabilística entre acciones) o determinista (una
+sola acción elegida con probabilidad 1 en cada estado).
+Función de valor de una política. Dada una política π, el valor de estado en el tiempo
+t es el valor esperado de las recompensas futuras hasta el final del episodio, condicionado a
+iniciar en St = s:
+"
+#
+vtπ (s) = Eπ
+
+TX
+−1
+
+Rk+1 + G(ST ) St = s .
+
+k=t
+
+Función valor acción–estado. El valor acción–estado qtπ (s, a) representa la recompensa
+esperada al tomar la acción a en el estado s en el tiempo t, y luego seguir la política π:
+
+
+qtπ (s, a) = Eπ Rt+1 +
+
+TX
+−1
+
+
+
+Rk+1 + G(ST ) St = s, At = a .
+
+k=t+1
+
+Recursión de Bellman. La función de valor se construye de forma recursiva hacia atrás
+en el tiempo, desde el instante final t = T hasta el instante inicial t = 0. Este procedimiento
+recibe el nombre de retroinducción (o backward induction), y se basa en descomponer el valor
+total esperado en dos componentes fundamentales:
+La recompensa inmediata esperada al tomar una acción en el estado actual.
+16
+
+El valor esperado futuro, que proviene de la evolución del sistema bajo la política
+desde el siguiente estado.
+Para cada etapa t ∈ {0, 1, . . . , T − 1} y estado s ∈ S, la función de valor bajo una
+política π se define recursivamente como:
+vTπ (s) = G(s),
+
+
+vtπ (s) =
+
+X
+
+
+
+πt (a | s) r(s, a) +
+
+X
+
+π
+P (s′ | s, a) vt+1
+(s′ ) .
+
+s′ ∈S
+
+a∈A(s)
+
+Esta ecuación expresa que el valor de estar en s en el tiempo t consiste en:
+1. Promediar, según la política πt , sobre todas las acciones admisibles a en s;
+2. Para cada acción a, calcular la suma de:
+la recompensa inmediata esperada r(s, a);
+el valor esperado del siguiente estado s′ , ponderado por la probabilidad de transitar
+a s′ al ejecutar a en s.
+Alternativamente, se define la función acción–valor (también llamada función Q), que
+representa el valor esperado de tomar una acción específica a en s en el tiempo t, y seguir la
+política π desde t + 1 en adelante:
+qtπ (s, a) = r(s, a) +
+
+X
+
+π
+P (s′ | s, a) vt+1
+(s′ ).
+
+s′ ∈S
+
+Una vez calculados los valores qtπ (s, a) para todas las acciones admisibles, se puede
+reconstruir vtπ (s) como un promedio ponderado:
+vtπ (s) =
+
+X
+
+πt (a | s) qtπ (s, a).
+
+a∈A(s)
+
+Interpretación pedagógica. Esta recursión formaliza la idea de que la utilidad de estar
+en un estado hoy depende de:
+qué acciones son elegidas hoy,
+qué recompensas se obtienen de inmediato,
+π
+y cómo esas decisiones afectan la posición futura, medida a través de vt+1
+.
+
+17
+
+La estructura recursiva permite computar los valores de forma descendente desde el final
+hacia el inicio, partiendo de una condición terminal vTπ (s) = G(s) que actúa como ancla para
+los cálculos.
+Caso sin política (óptimo). Cuando se busca la política óptima, se reemplaza el promedio
+ponderado por un operador máximo:
+
+
+
+
+vt∗ (s) = máx r(s, a) +
+a∈A(s)
+
+X
+
+∗
+P (s′ | s, a) vt+1
+(s′ ) ,
+
+s′ ∈S
+
+qt∗ (s, a) = r(s, a) +
+
+X
+
+∗
+P (s′ | s, a) vt+1
+(s′ ).
+
+s′ ∈S
+
+Esto permite definir una política codiciosa por etapa:
+πt∗ (s) ∈ arg máx qt∗ (s, a).
+a∈A(s)
+
+Lectura de las ecuaciones. Cada una de estas expresiones tiene una lectura intuitiva:
+Valor de política vtπ (s): expectativa total de recompensas futuras desde el estado s
+siguiendo la política π.
+Valor acción–estado qtπ (s, a): cuánto vale tomar a en s en t, anticipando los futuros
+movimientos del sistema.
+Ecuación óptima vt∗ (s): mejor valor alcanzable desde s en t, considerando la mejor
+acción posible.
+Estas funciones permiten comparar distintas políticas, construir políticas óptimas, y
+analizar el impacto de decisiones locales sobre el rendimiento acumulado.
+Valor óptimo y política óptima. El valor óptimo en cada etapa es el máximo valor
+posible que puede obtenerse desde un estado dado si se siguen decisiones óptimas desde ese
+momento hasta el final:
+
+
+
+
+vt∗ (s) = máx r(s, a) +
+a∈A(s)
+
+X
+
+∗
+P (s′ | s, a) vt+1
+(s′ ) ,
+
+vT∗ (s) = G(s).
+
+s′ ∈S
+
+La política óptima en cada etapa se define como:
+
+
+
+
+πt∗ (s) ∈ arg máx r(s, a) +
+a∈A(s)
+
+X
+s′ ∈S
+
+18
+
+∗
+P (s′ | s, a) vt+1
+(s′ ) .
+
+Interpretación. Esta formulación permite modelar decisiones secuenciales donde el agente
+conoce el número de pasos restantes. En cada instante t, la acción óptima puede cambiar
+porque el "valor del futuro"se reduce al acercarse a T . Esto refleja que ciertas estrategias
+pueden ser óptimas en el largo plazo pero no cuando queda poco tiempo para ejecutar
+decisiones.
+Ejemplo con T = 3. Sea T = 3 y G ≡ 0, con recompensas y transiciones estacionarias. El
+cálculo de valores se hace de manera descendente:
+
+v3∗ (s) = 0,
+v2∗ (s) = máx r(s, a),
+a∈A(s)
+
+#
+
+"
+
+v1∗ (s) =
+
+máx r(s, a) +
+
+X
+
+a∈A(s)
+
+P (s
+
+′
+
+| s, a) v2∗ (s′ )
+
+P (s
+
+′
+
+| s, a) v1∗ (s′ )
+
+#
+
+"
+
+v0∗ (s) =
+
+,
+
+s′
+
+máx r(s, a) +
+
+X
+
+a∈A(s)
+
+.
+
+s′
+
+Forma matricial (compacta y computable). En problemas con espacio de estados
+finito, es posible representar las funciones y operadores del MDP en forma matricial, lo que
+permite realizar los cálculos de manera más eficiente, compacta y clara. A continuación se
+describe esta formulación, partiendo de la forma escalar y pasando a su versión matricial.
+Versión escalar (por estado y acción). La ecuación de Bellman para una política
+−1
+dada π = {πt }Tt=0
+y una etapa t < T se expresa, en forma escalar, como:
+
+
+vtπ (s) =
+
+X
+
+
+
+πt (a | s)  r(s, a) +
+
+X
+
+π
+P (s′ | s, a) vt+1
+(s′ )  .
+
+s′ ∈S
+
+a∈A(s)
+
+Esta expresión:
+Promedia sobre las acciones a, usando la política πt (a | s),
+Suma la recompensa inmediata esperada r(s, a),
+Y agrega el valor esperado futuro, ponderado por las transiciones a estados siguientes
+s′ .
+Aunque esta forma es útil para razonamiento teórico y para problemas pequeños, resulta
+menos conveniente computacionalmente, especialmente cuando el número de estados y acciones
+crece.
+19
+
+Versión matricial. Para convertir esta formulación a una forma matricial más compacta,
+se realiza lo siguiente:
+1. Enumeración de los estados. Fijamos un orden en los estados:
+s1 = (U, 0),
+
+s2 = (U, 1),
+
+s3 = (D, 0),
+
+s4 = (D, 1).
+
+Por tanto, toda función definida sobre S puede representarse como un vector columna
+en R4 .
+2. Vector de recompensas por acción. Para cada acción a, se define el vector de
+recompensas inmediatas esperadas como:
+
+
+
+
+r(s1 , a)
+
+
+
+r(s2 , a)
+ ∈ R4 .
+ra = 
+
+
+r(s3 , a)
+
+
+r(s4 , a)
+3. Matriz de transición por acción. Para cada acción a, se define la matriz de transición:
+Pa = [ P (sj | si , a) ]4i,j=1 ∈ R4×4 ,
+donde la fila i representa la distribución de probabilidad sobre estados siguientes sj al
+ejecutar la acción a en el estado si .
+4. Política como matriz diagonal. En la formulación matricial, la política en una etapa
+t se representa mediante una colección de matrices diagonales, una por cada acción a.
+Cada matriz indica, en su diagonal, la probabilidad de ejecutar la acción a en cada
+estado si . Formalmente:
+Πa,t = diag (πt (a | s1 ), πt (a | s2 ), πt (a | s3 ), πt (a | s4 )) ∈ R4×4 .
+Ejemplo. Supongamos que en la etapa t = 1 la política asigna las siguientes probabilidades:
+Buy Sell Hold
+s1 = (U, 0) 0,7
+s2 = (U, 1) 0
+s3 = (D, 0) 0,4
+s4 = (D, 1) 0
+20
+
+0
+0,8
+0
+0,9
+
+0,3
+0,2
+0,6
+0,1
+
+A partir de esta tabla, las matrices diagonales asociadas son:
+
+
+0,7
+
+
+ 0
+ΠBuy,1 = 
+
+ 0
+
+0
+
+
+
+0 0 0
+
+0 0 0
+,
+
+0 0,4 0
+
+0 0 0
+
+
+
+
+
+0 0 0 0
+
+
+
+0 0,8 0 0 
+,
+
+ΠSell,1 = 
+
+0 0 0 0 
+
+
+0 0 0 0,9
+
+
+
+
+0,3 0
+0
+0
+
+
+
+ 0 0,2 0
+0
+.
+
+ΠHold,1 = 
+
+
+ 0
+0
+0,6
+0
+
+
+0
+0
+0 0,1
+Cada una de estas matrices coloca en su diagonal las probabilidades de tomar la
+acción correspondiente en cada estado. La suma de las matrices Πa,t sobre todas las
+acciones a da la identidad, reflejando que en cada estado debe elegirse alguna acción
+con probabilidad total 1.
+5. Promedio de recompensas y transiciones. A partir de estas matrices, se construyen
+los promedios ponderados de recompensas y transiciones en la etapa t:
+
+rπt =
+
+X
+
+Πa,t ra ,
+
+Pπt =
+
+X
+
+Πa,t Pa .
+
+a
+
+a
+
+6. Recursión de Bellman en forma matricial. Definiendo el vector de valores vt =
+[vt (s1 ), vt (s2 ), vt (s3 ), vt (s4 )]⊤ , se tiene:
+vT = g,
+
+vt = rπt + Pπt vt+1 .
+
+Donde g es el vector de pagos terminales: g = [G(s1 ), G(s2 ), G(s3 ), G(s4 )]⊤ .
+Caso óptimo (forma matricial de Bellman óptima). Cuando se busca el valor óptimo
+en lugar del valor bajo una política dada, no se promedia con πt sino que se maximiza
+directamente sobre las acciones admisibles. La versión escalar óptima es:
+"
+
+vt∗ (s) =
+
+#
+
+máx r(s, a) +
+
+a∈A(s)
+
+X
+
+P (s
+
+′
+
+∗
+| s, a) vt+1
+(s′ )
+
+.
+
+s′
+
+Esta expresión se puede llevar a forma matricial componente a componente. Dado que
+cada acción a define su propio vector de recompensas ra y matriz de transición Pa , se calcula:
+21
+
+n
+
+o
+
+∗
+vt∗ = máx ra + Pa vt+1
+.
+a∈A
+
+Aquí, el operador máximo se interpreta componente a componente: para cada estado
+si , se considera el valor resultante de aplicar cada acción admisible a ∈ A(si ), y se elige la
+acción que produce el mayor valor total inmediato más futuro.
+Máscara de admisibilidad. Dado que no todas las acciones son válidas en todos los
+estados, es necesario respetar las restricciones del conjunto A(s). Esto se puede manejar de
+dos formas:
+1. Filtrado dinámico: al calcular máx en cada estado, se evalúan solo las acciones
+a ∈ A(si ).
+2. Enmascaramiento: se asigna un valor prohibitivo (por ejemplo, −∞) a la recompensa
+r(s, a) cuando a ∈
+/ A(s), de modo que esa acción nunca sea seleccionada por el operador
+máx.
+Observaciones finales. La formulación matricial tiene ventajas importantes:
+Permite programar y resolver el problema de manera más eficiente, especialmente
+cuando se usan librerías vectorizadas o aceleradas por GPU.
+Refleja claramente la estructura lineal (en el caso de una política fija) o pieza por pieza
+(en el caso óptimo).
+Facilita el uso de álgebra lineal y métodos iterativos como la iteración de valores.
+Hace más natural la extensión a casos con mayor número de estados o múltiples activos.
+Este enfoque, aplicado a problemas con horizonte finito, permite simular, optimizar y
+analizar políticas de trading con estructura temporal clara, interpretando el valor de cada
+decisión en función del tiempo restante, el régimen del mercado y el inventario del agente.
+
+8.
+
+De los datos a la política (horizonte finito T )
+
+En esta sección se establece el recorrido completo desde las series de precios hasta la
+−1
+política óptima no estacionaria {πt∗ }Tt=0
+en un horizonte discreto y finito t = 0, 1, . . . , T .
+Partimos de datos de mercado, construimos retornos y regímenes (Mt ), estimamos transiciones
+22
+
+y recompensas esperadas, formulamos el MDP por etapa (matrices Pa,t y vectores ra,t ), y
+resolvemos por retroinducción (backward induction) las ecuaciones de Bellman finito–horizonte.
+El resultado es una regla de decisión óptima dependiente del tiempo restante T −t.
+Algorithm 1 Acciones admisibles y actualización de inventario f (i, a)
+1: Entradas: inventario i ∈ {0, 1}; acción a ∈ {Buy, Sell, Hold}
+2: Salidas: conjunto de acciones admisibles A(i); inventario siguiente i+ = f (i, a)
+3: Acciones admisibles:
+4: if i = 0 then
+5:
+A(i) ← {Buy, Hold}
+6: else
+7:
+A(i) ← {Sell, Hold}
+8: end if
+9: Actualización determinista:
+
+f (i, a) =
+
+
+
+
+1,
+
+
+
+
+0,
+
+
+
+
+i,
+
+a = Buy,
+a = Sell,
+a = Hold.
+
+=0
+
+Algorithm 2 Construir retornos log y régimen binario Mt
+1: Entrada: precios {Pt }n
+t=0 ; umbral θ (por defecto θ = 0)
+2: Salida: retornos rt = log(Pt /Pt−1 ) para t = 1:n; régimen Mt ∈ {U, D} para t = 1:n
+3: for t = 1 to n do
+4:
+rt ← log(P
+ t ) − log(Pt−1 )
+5:
+
+Mt ←
+
+
+U,
+
+rt > θ
+
+
+D,
+
+rt ≤ θ
+
+6: end for
+7: Chequeos: proporciones de U/D razonables; sensibilidad a θ. =0
+
+23
+
+Algorithm 3 Conteo de transiciones y MLE de (α, β)
+1: Entrada: M1 , . . . , Mn con Mt ∈ {U, D}
+b Tb
+b β;
+2: Salida: α,
+3: Inicializar NU U , NU D , NDU , NDD ← 0
+4: for t = 1 to n − 1 do
+5:
+Incrementar el conteo correspondiente a (Mt , Mt+1 )
+6: end for
+7: NU • ← NU U + NU D ; ND• ← NDU + NDD
+NDD
+NU U b
+b ←
+; β←
+8: MLE: α
+NU •
+ND•
+NU U + κ
+NDD + κ
+9: (Opcional) Laplace con κ > 0: α̃ ←
+, β̃ ←
+NU • + 2κ
+ND• + 2κ
+
+
+b
+b
+α
+1−α
+
+10: Construir Tb = 
+1 − βb
+βb
+11: Chequeos: filas de Tb suman 1; N∗∗ consistentes. =0
+Nota (estacionario vs. dependiente de t). En horizonte finito pueden usarse transiciones
+estacionarias (Tt ≡ T ) para simplificar, o dependientes del tiempo (Tt ) si se desea capturar
+estacionalidad. En lo que sigue, se muestran ambas posibilidades con subíndices t cuando
+aplica.
+Algorithm 4 Estimación de medias por régimen futuro: µU = E[rt+1 | Mt+1 = U ], µD =
+E[rt+1 | Mt+1 = D]
+1: Entrada: retornos rt+1 para t = 0:n − 1; etiquetas Mt+1 ∈ {U, D}
+2 b2
+bU , µ
+b D (y opcional σ
+bU
+, σD )
+2: Salida: µ
+3: Inicializar acumuladores: SU , SD ← 0; CU , CD ← 0
+4: for t = 0 to n − 1 do
+5:
+if Mt+1 = U then
+6:
+SU += rt+1 ; CU += 1
+7:
+else
+8:
+SD += rt+1 ; CD += 1
+9:
+end if
+10: end for
+b U ← SU / máx(1, CU ); µ
+b D ← SD / máx(1, CD )
+11: µ
+2 b2
+bU
+12: (Opcional) Varianzas por régimen: σ
+, σD por fórmula muestral.
+13: Chequeos: CU , CD > 0; magnitudes acordes con horizonte temporal y costos c. =0
+
+24
+
+Algorithm 5 Cálculo de µ̄t (m) y rt ((m, i), a)
+1: Entrada: T (o Tt ) con parámetros (α, β); medias (µU , µD ); costo c > 0; estado s = (m, i);
+acción a; etapa t
+2: Salida: µ̄t (m); recompensa esperada rt ((m, i), a) (si admisible)
+3: Media condicional de retorno para el próximo tramo:
+µ̄t (U ) ← Tt (U, U )µU + Tt (U, D)µD ,
+
+µ̄t (D) ← Tt (D, U )µU + Tt (D, D)µD .
+
+4: Inventario siguiente: i+ ← f (i, a)
+5: Recompensa esperada inmediata (si a admisible en i):
+
+rt ((m, i), a) ← i+ · µ̄t (m) − c |i+ − i|.
+
+6: Caso estacionario: si Tt ≡ T , entonces µ̄t (m) ≡ µ̄(m) y rt ≡ r. =0
+
+25
+
+Algorithm 6 Construir {Pa,t , ra,t }a∈A con máscara de admisibilidad
+1: Entrada: T (o Tt ); µ̄t (U ), µ̄t (D); costo c; orden de estados s1 = (U, 0), s2 = (U, 1),
+s3 = (D, 0), s4 = (D, 1)
+2: Salida: PBuy,t , PSell,t , PHold,t ; rBuy,t , rSell,t , rHold,t
+3: Transiciones por acción y etapa. Inventario siguiente i+ = f (i, a) y régimen siguiente
+distribuido según Tt . Así, por ejemplo:
+(U, 0)
+
+(U, 1)
+
+(D, 0)
+
+(D, 1)
+
+0
+0
+0
+0
+
+Tt (U, U )
+0
+Tt (D, U )
+0
+
+0
+0
+0
+0
+
+Tt (U, D) 
+
+
+0
+,
+
+Tt (D, D) 
+
+0
+
+
+
+(U, 0) 
+
+(U, 1) 
+
+PBuy,t =
+
+(D, 0) 
+
+(D, 1)
+
+(U, 0)
+
+
+(U, 0) 
+0
+
+(U, 1) 
+T (U, U )
+ t
+PSell,t =
+
+(D, 0) 
+0
+
+(D, 1) Tt (D, U )
+(U, 0)
+
+
+
+(U, 1)
+
+(D, 0)
+
+(D, 1)
+
+0
+0
+0
+0
+
+0
+Tt (U, D)
+0
+Tt (D, D)
+
+0
+0
+0
+0
+
+(U, 1)
+
+(D, 0)
+
+(D, 1)
+
+
+
+
+
+
+
+,
+
+
+
+
+
+
+(U, 0)  Tt (U, U )
+0
+Tt (U, D)
+0
+
+
+
+
+(U, 1) 
+0
+T
+(U,
+U
+)
+0
+T
+(U,
+D)
+t
+t
+
+.
+PHold,t =
+
+
+
+(D, 0) 
+T
+(D,
+U
+)
+0
+T
+(D,
+D)
+0
+t
+ t
+
+(D, 1)
+0
+Tt (D, U )
+0
+Tt (D, D)
+4: Recompensas esperadas inmediatas por etapa (inadmisibles → “n/a” o −∞ si se
+
+maximiza):
+
+
+
+
+µ̄ (U ) − c 
+ t
+
+
+
+n/a 
+
+,
+rBuy,t = 
+
+µ̄t (D) − c
+
+
+n/a
+
+
+
+
+
+n/a
+
+
+
+ −c 
+
+,
+rSell,t = 
+
+n/a
+
+
+−c
+
+
+
+
+
+0 
+
+
+
+ µ̄t (U ) 
+
+.
+rHold,t = 
+
+ 0 
+
+
+µ̄t (D)
+
+5: Máscara de admisibilidad (para optimalidad): crear r̃a,t sustituyendo “n/a” por
+
+−∞.
+6: Caso estacionario: si Tt ≡ T , entonces Pa,t ≡ Pa y ra,t ≡ ra . =0
+
+26
+
+−1
+Algorithm 7 Evaluación de una política no estacionaria π = {πt }Tt=0
+(forma matricial)
+1: Entrada: {Pa,t , ra,t }a,t ; política πt (a | si ) por etapa; pago terminal G; (opcional) γ ∈ (0, 1]
+
+π
+2: Salida: {vtπ }Tt=0 tal que vTπ = g y vtπ = rπt ,t + γPπt ,t vt+1
+
+3: Construir g = [G(s1 ), G(s2 ), G(s3 ), G(s4 )]⊤ y fijar vTπ ← g
+4: for t = T − 1 to 0 do
+
+Πa,t ← diag(πt (a | s1 ), . . . , πt (a | s4 )) (una por acción)
+P
+P
+6:
+Pπt ,t ← a Πa,t Pa,t ; rπt ,t ← a Πa,t ra,t
+π
+7:
+vtπ ← rπt ,t + γ Pπt ,t vt+1
+8: end for
+9: Devolver {vtπ }Tt=0 =0
+5:
+
+Lectura: Por etapa, el valor es ganancia inmediata promedio bajo πt más valor futuro esperado
+(según Pπt ,t ), con anclaje terminal vTπ = g. Si no se usa descuento en finito–horizonte, tomar
+γ = 1.
+Algorithm 8 Dinámica óptima finito–horizonte (backward induction)
+1: Entrada: {Pa,t , r̃a,t }a,t (con −∞ en inadmisibles); pago terminal G; (opcional) γ ∈ (0, 1]
+−1
+2: Salida: valores óptimos {vt∗ }Tt=0 y política óptima no estacionaria {πt∗ }Tt=0
+3: Fijar vT∗ ← g con g = [G(s1 ), . . . , G(s4 )]⊤
+4: for t = T − 1 to 0 do
+5:
+for cada estado i ∈ {1, . . . , 4} do
+∗
+6:
+Qa,t [i] ← r̃a,t [i] + γ (Pa,t vt+1
+)[i] para todas las acciones a
+∗
+7:
+vt [i] ← máxa Qa,t [i]
+8:
+Elegir a⋆ ∈ arg máxa Qa,t [i] y definir πt∗ (si ) := a⋆
+9:
+end for
+10: end for
+−1
+11: Devolver {vt∗ }Tt=0 , {πt∗ }Tt=0
+=0
+Comentarios. (i) La política óptima depende de t porque el tiempo restante T −t altera el
+peso del futuro. (ii) El pago terminal G permite modelar liquidación forzosa o penalizaciones
+por inventario al final (p. ej., G((m, 1)) = −cliq ). (iii) Si se desea, γ puede fijarse en 1.
+
+27
+
+Algorithm 9 Mapa completo (horizonte finito) desde datos hasta política óptima
+1: Paso A (Datos → etiquetas): construir rt y Mt con umbral θ
+2: Paso B (Transiciones): estimar T (o Tt ) vía MLE/Laplace
+3: Paso C (Retornos por régimen): estimar µU , µD con rt+1 etiquetado por Mt+1
+4: Paso D (Recompensa por etapa): computar µ̄t (m) y rt ((m, i), a)
+5: Paso E (MDP por etapa): construir Pa,t y r̃a,t con máscara de admisibilidad
+6: Paso F (Terminal): definir G (p. ej., liquidación obligatoria o G ≡ 0)
+7: Paso G (Evaluación o solución):
+π
+Evaluación de una política dada {πt }: usar la recursión vtπ = rπt ,t + γPπt ,t vt+1
+con
+vTπ = g.
+
+Óptimo finito–horizonte: aplicar retroinducción (algoritmo anterior) para obtener
+{πt∗ } y {vt∗ }.
+8: Paso H (Chequeos): filas de Pa,t suman 1; signos y magnitudes de recompensas vs.
+
+costos; validación por residuo de Bellman por etapa ∥rπt ,t + γPπt ,t vt+1 − vt ∥∞ . =0
+
+28
+
+

@@ -1,0 +1,522 @@
+Fundamentos Matemáticos del Aprendizaje
+por Refuerzo
+Capítulo 1 — Marco Teórico (basado en Sutton & Barto)
+Prof. Julián Fernando Sánchez
+Semillero de Aprendizaje por Refuerzo
+Programa de Ciencia de Datos
+Universidad Externado de Colombia
+2 de septiembre de 2025
+
+Resumen
+Este capítulo presenta un desarrollo riguroso del marco matemático del Aprendizaje
+por Refuerzo (RL), con énfasis en Procesos de Decisión de Markov (MDP), funciones de
+valor, operadores de Bellman, y algoritmos clásicos de iteración de valores y de políticas.
+El tratamiento sigue de cerca a Reinforcement Learning: An Introduction de Sutton y
+Barto (2018), adaptándolo al contexto del Semillero de Aprendizaje por Refuerzo del
+Programa de Ciencia de Datos de la Universidad Externado de Colombia.
+
+Índice
+1. Introducción
+
+2
+
+2. Preliminares y notación
+
+2
+
+3. Procesos de Decisión de Markov (MDP)
+
+3
+
+4. Retorno y funciones de valor
+
+3
+
+5. Operadores de Bellman y contracción
+
+4
+
+6. Optimalidad
+
+5
+
+1
+
+7. Evaluación de políticas e iteración de políticas
+7.1. Evaluación iterativa de π . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7.2. Teorema de mejora de política . . . . . . . . . . . . . . . . . . . . . . . . . .
+7.3. Iteración de políticas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+5
+5
+6
+6
+
+8. Iteración de valores
+
+7
+
+9. Variantes de criterio: retorno promedio
+
+7
+
+10.Extensiones y adelanto: aprendizaje sin modelo y aproximación
+10.1. TD(0) y Q-learning (esbozo) . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10.2. Estados/acciones continuos y aproximadores . . . . . . . . . . . . . . . . . .
+
+8
+8
+8
+
+11.Buenas prácticas y consideraciones empíricas
+
+8
+
+1.
+
+Introducción
+
+El Aprendizaje por Refuerzo (RL, por sus siglas en inglés) estudia agentes que aprenden
+a tomar decisiones secuenciales mediante interacción con un entorno. Matemáticamente,
+modelamos esta interacción como un Proceso de Decisión de Markov (MDP), lo que permite
+formalizar objetivos, políticas y nociones de optimalidad. En este capítulo establecemos la
+base teórica: definimos MDPs, políticas, retorno, funciones de valor, ecuaciones de Bellman
+y teoremas de contracción que garantizan existencia y unicidad de soluciones. Además, se
+presentan algoritmos fundamentales (iteración de valores y de políticas), que constituyen el
+punto de partida para métodos más avanzados (p. ej., TD-learning y Q-learning), tratados al
+final como adelanto.
+
+2.
+
+Preliminares y notación
+
+Trabajaremos principalmente con espacios de estados y acciones finitos. Denotamos por
+S el conjunto finito de estados y por A el conjunto finito de acciones. Un tiempo discreto
+t ∈ N indexa la evolución del sistema. Emplearemos la notación estándar de [1].
+St ∈ S: estado en el tiempo t.
+At ∈ A: acción elegida en el tiempo t.
+Rt+1 ∈ R: recompensa recibida tras transicionar de St a St+1 al ejecutar At .
+2
+
+γ ∈ [0, 1): factor de descuento.
+π(a | s): política (estocástica), probabilidad de actuar con a en s.
+Comentario 2.1 (Consideraciones de medida). En espacios continuos, el análisis requiere
+espacios medibles y kernels de transición (Markov). En este capítulo nos enfocamos en el caso
+finito para enfatizar ideas fundamentales sin carga técnica adicional; comentarios sobre el
+caso continuo se dan en §10.
+
+3.
+
+Procesos de Decisión de Markov (MDP)
+
+Definición 3.1 (MDP finito). Un MDP finito es una tupla ⟨S, A, P, r, γ⟩ donde:
+i) S es un conjunto finito de estados y A un conjunto finito de acciones.
+ii) P (s′ | s, a) son probabilidades de transición que satisfacen
+todo (s, a).
+
+P
+
+′
+s′ ∈S P (s | s, a) = 1 para
+
+iii) r(s, a) = E[Rt+1 | St = s, At = a] es la recompensa esperada inmediata.
+iv) γ ∈ [0, 1) es el factor de descuento.
+Definición 3.2 (Propiedad de Markov). El proceso satisface la propiedad de Markov si
+P{St+1 = s′ , Rt+1 = r | S0 , A0 , . . . , St , At } = P{St+1 = s′ , Rt+1 = r | St , At }.
+Una política π especifica π(a | s) ∈ [0, 1] con
+políticas estacionarias (independientes de t).
+
+4.
+
+a∈A π(a | s) = 1. Consideraremos típicamente
+
+P
+
+Retorno y funciones de valor
+El objetivo del agente bajo descuento es maximizar el retorno esperado
+Gt =
+
+∞
+X
+
+γ k Rt+1+k .
+
+k=0
+
+Definición 4.1 (Funciones de valor bajo π). Para una política π:
+h
+
+i
+
+vπ (s) := Eπ Gt | St = s ,
+h
+
+(1)
+i
+
+qπ (s, a) := Eπ Gt | St = s, At = a .
+3
+
+(2)
+
+Las ecuaciones de Bellman de expectativa para vπ y qπ son:
+vπ (s) =
+
+X
+
+
+
+π(a | s) r(s, a) + γ
+
+X
+
+a
+
+′
+
+′
+
+
+
+P (s | s, a) vπ (s ) ,
+
+(3)
+
+π(a′ |s′ ) qπ (s′ , a′ ).
+
+(4)
+
+s′
+
+qπ (s, a) = r(s, a) + γ
+
+X
+
+P (s′ |s, a)
+
+X
+
+s′
+
+a′
+
+En forma vectorial, si denotamos por vπ ∈ R|S| y definimos la matriz de transición
+P
+inducida por π como (Pπ )(s, s′ ) = a π(a | s)P (s′ | s, a), y el vector de recompensas rπ (s) =
+P
+a π(a | s)r(s, a), entonces
+vπ = rπ + γPπ vπ ,
+(5)
+cuya solución existe y es única dado que ∥γPπ ∥∞ ≤ γ < 1.
+
+5.
+
+Operadores de Bellman y contracción
+Definimos el operador de Bellman asociado a π:
+(Tπ v)(s) :=
+
+X
+
+
+
+π(a | s) r(s, a) + γ
+
+a
+
+X
+
+′
+
+′
+
+
+
+P (s | s, a) v(s ) .
+
+(6)
+
+s′
+
+Proposición 5.1 (Contracción de Tπ ). Para cualquier v, w ∈ R|S| , ∥Tπ v − Tπ w∥∞ ≤ γ ∥v −
+w∥∞ .
+Demostración (boceto). Por linealidad parcial y convexidad de la suma ponderada por probabilidades,
+|(Tπ v)(s) − (Tπ w)(s)| =
+
+X
+
+π(a|s)γ
+
+X
+
+a
+
+≤γ
+
+P (s′ |s, a) [v(s′ ) − w(s′ )]
+
+s′
+
+X
+
+π(a|s)
+
+X
+
+a
+
+P (s′ |s, a) ∥v − w∥∞
+
+s′
+
+= γ∥v − w∥∞ .
+Tomando supremo en s se obtiene el resultado.
+[Existencia y unicidad] Para cada π, Tπ tiene un único punto fijo vπ , y la iteración
+v
+= Tπ v (k) converge a vπ para cualquier v (0) .
+(k+1)
+
+4
+
+6.
+
+Optimalidad
+La función de valor óptima y su análoga de acción son
+v ∗ (s) := sup vπ (s),
+
+q ∗ (s, a) := sup qπ (s, a).
+
+π
+
+(7)
+
+π
+
+Definimos el operador de Bellman de optimalidad:
+
+
+(T v)(s) := máx r(s, a) + γ
+a∈A
+
+X
+
+′
+
+′
+
+
+
+P (s |s, a) v(s ) .
+
+(8)
+
+s′
+
+Teorema 6.1 (Ecuación de Bellman de optimalidad). El valor óptimo v ∗ es el único punto
+fijo de T , y T es una contracción con módulo γ en norma supremo.
+Idea de la demostración. La contracción se prueba como en §5, cambiando la media ponderada por el operador máx, que también es no expansivo. Unicidad y existencia se deducen
+por el teorema del punto fijo de Banach.
+Una política π ∗ es óptima si y sólo si es codiciosa con respecto a v ∗ : para todo s, π ∗ (·|s)
+asigna probabilidad 1 a alguna acción en el arg max de la ecuación anterior.
+
+7.
+
+Evaluación de políticas e iteración de políticas
+
+7.1.
+
+Evaluación iterativa de π
+
+Dados r, P y π, podemos aproximar vπ iterando
+v (k+1) (s) ← (Tπ v (k) )(s),
+con criterio de parada ∥v (k+1) − v (k) ∥∞ < ε.
+
+5
+
+∀s ∈ S,
+
+(9)
+
+Algorithm 1 Evaluación de política (iterativa)
+1: Entrada: MDP ⟨S, A, P, r, γ⟩, política π, tolerancia ε.
+2: Inicializar v ← 0.
+3: repeat
+4:
+for cada s ∈ S do
+h
+i
+P
+P
+5:
+vnuevo (s) ← a π(a|s) r(s, a) + γ s′ P (s′ |s, a) v(s′ )
+6:
+end for
+7:
+δ ← ∥vnuevo − v∥∞ ; v ← vnuevo
+8: until δ < ε
+9: Salida: v (aprox. de vπ ).
+
+7.2.
+
+Teorema de mejora de política
+
+Teorema 7.1 (Mejora de política). Sea π una política y defínase una política codiciosa π ′
+respecto de qπ : π ′ (s) ∈ arg maxa qπ (s, a) para todo s. Entonces vπ′ (s) ≥ vπ (s) para todo s, con
+igualdad si y sólo si π ya es óptima.
+Boceto. De la definición de qπ y el principio de optimalidad se obtiene que actuar codiciosamente respecto de qπ no puede empeorar el valor esperado. La prueba formal usa inducción
+sobre el horizonte y/o el operador de Bellman de política fija.
+
+7.3.
+
+Iteración de políticas
+
+La iteración de políticas alterna evaluación aproximada de π y mejora codiciosa:
+Algorithm 2 Iteración de políticas
+1: Entrada: MDP, tolerancias ε.
+2: Inicializar una política π arbitraria.
+3: repeat
+4:
+Evaluar aproximadamente vπ (Algoritmo 1).
+h
+i
+P
+5:
+Para cada s, π(s) ← arg maxa r(s, a) + γ s′ P (s′ |s, a) vπ (s′ ) .
+6: until política estable
+7: Salida: π óptima y vπ .
+
+6
+
+8.
+
+Iteración de valores
+La iteración de valores aplica directamente el operador de optimalidad T :
+v
+
+(k+1)
+
+
+
+(s) ← máx r(s, a) + γ
+a
+
+X
+
+′
+
+P (s |s, a) v
+
+(k)
+
+′
+
+
+
+(s ) .
+
+(10)
+
+s′
+
+Algorithm 3 Iteración de valores
+1: Entrada: MDP, tolerancia ε.
+2: Inicializar v ← 0.
+3: repeat
+4:
+δ←0
+5:
+for cada s ∈ S do
+6:
+old ← v(s)
+i
+h
+P
+7:
+v(s) ← máxa r(s, a) + γ s′ P (s′ |s, a) v(s′ )
+8:
+δ ← máx{δ, |old − v(s)|}
+9:
+end for
+10: until δ < ε
+i
+h
+P
+11: Recuperar una política codiciosa: π(s) ∈ arg maxa r(s, a) + γ s′ P (s′ |s, a) v(s′ ) .
+
+Cotas de error y criterio de parada. Dado que T es γ-contractivo en ∥ · ∥∞ , la sucesión
+γ
+v (k) converge a v ∗ . Si ∥v (k+1) − v (k) ∥∞ < ε, entonces ∥v (k) − v ∗ ∥∞ ≤ ε 1−γ
+. Para obtener una
+política ε-óptima es común usar un umbral proporcional a (1 − γ) ε.
+
+9.
+
+Variantes de criterio: retorno promedio
+
+En tareas continuas sin descuento, puede considerarse el criterio de retorno promedio por
+hP
+i
+paso ρ(π) = lı́mn→∞ n1 Eπ nt=1 Rt , sujeto a condiciones ergódicas. Este capítulo se concentra
+en el caso con descuento, más general y estable numéricamente.
+
+7
+
+10.
+
+Extensiones y adelanto: aprendizaje sin modelo y
+aproximación
+
+10.1.
+
+TD(0) y Q-learning (esbozo)
+
+En problemas sin modelo completo de P y r, surgen métodos libres de modelo. Dos
+ejemplos clásicos:
+h
+
+i
+
+TD(0): V (St ) ← V (St ) + α Rt+1 + γV (St+1 ) − V (St ) ,
+
+
+(11)
+
+
+Q-learning: Q(St , At ) ← Q(St , At ) + α Rt+1 + γ máx
+Q(St+1 , a′ ) − Q(St , At ) .
+′
+a
+
+10.2.
+
+(12)
+
+Estados/acciones continuos y aproximadores
+
+Si S o A son continuos, se emplean aproximadores (p. ej., redes neuronales) para v, q o
+π, y algoritmos actor–critic o de control continuo (SAC, DDPG, PPO). El análisis requiere
+nociones de estabilidad y funciones de Lyapunov en ciertos casos; estos temas exceden el
+alcance de este capítulo introductorio.
+
+11.
+
+Buenas prácticas y consideraciones empíricas
+
+Estacionariedad: el formalismo asume que P y r no cambian en el tiempo; ante no
+estacionariedad se usan ventanas móviles, γ más bajo o técnicas de meta-RL.
+Exploración: e-greedy, Boltzmann, ruido de acción, o políticas estocásticas explícitas.
+Criterios de evaluación: separación temporal (train/val/test), estabilidad ante perturbaciones, y métricas de riesgo si aplica (finanzas, robótica).
+
+Agradecimientos
+Este material fue elaborado para el Semillero de Aprendizaje por Refuerzo del Programa
+de Ciencia de Datos, Universidad Externado de Colombia, siguiendo la referencia clásica de
+Sutton y Barto.
+
+8
+
+Referencias
+[1] Richard S. Sutton y Andrew G. Barto, Reinforcement Learning: An Introduction, 2nd ed.,
+MIT Press, 2018. Disponible en línea.
+
+9
+
+
