@@ -1,0 +1,41 @@
+# Ideas para el Póster del Proyecto RL Trading (Semillero)
+
+## Objetivo Visual:
+El póster debe ser capaz de contar una historia: "Cómo una IA aprende a invertir sintiendo el pulso del mercado".
+
+## Secciones Sugeridas:
+
+1. **Título Impactante:**
+   "IA y Emociones: Agente de Aprendizaje por Refuerzo para el Trading de Criptomonedas"
+
+2. **Introducción (El '¿Por qué?'):**
+   - El mercado cripto es impulsado por psicología colectiva.
+   - Tradicionalmente se ignoran las emociones; nosotros las integramos.
+
+3. **El 'Mundo' del Agente (Gráfico Circular o Diagrama):**
+   - **Precios (OHLCV):** Las fotos del pasado del mercado.
+   - **Miedo y Codicia (Sentimiento):** El termómetro emocional.
+   - **Inventario:** ¿Tengo activo o tengo efectivo?
+
+4. **El 'Cerebro' (Diagrama de Q-Learning):**
+   - Explicar como una "Tabla de Sabiduría" que se actualiza.
+   - Estado -> Acción -> Recompensa -> Aprendizaje.
+
+5. **La Recompensa (Zanahoria y Garrote):**
+   - Premio por ganancias.
+   - Penalización por pagar comisiones innecesarias.
+   - Penalización por caminar en "suelos movedizos" (alta volatilidad).
+
+6. **Datos de Entrenamiento:**
+   - Activo: BNB/USDT (Binance).
+   - Temporalidad: 1 hora (1h).
+   - Periodo: 2023 - 2024 (Ciclos variados).
+
+7. **Resultados Esperados (Lo que queremos ver):**
+   - Curva de capital del agente vs. Mantener el activo (Buy & Hold).
+   - Momentos donde el sentimiento cambió la decisión del agente.
+
+## Consejos de Diseño:
+- Menos texto, más flechas y diagramas.
+- Usar colores corporativos de Binance (Amarillo/Negro) o tonos tecnológicos (Azul/Cian).
+- Incluir un código QR que lleve al repositorio de GitHub para los curiosos.

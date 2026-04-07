@@ -44,62 +44,54 @@
 \maketitle
 
 \begin{abstract}
-    Este trabajo presenta la creación de una Inteligencia Artificial (Agente de Aprendizaje por Refuerzo) capaz de operar automáticamente en el mercado de criptomonedas. A diferencia de los modelos tradicionales que solo miran números, nuestra propuesta integra el "estado de ánimo" del mercado (sentimiento colectivo) para tomar mejores decisiones. Este documento explica paso a paso el diseño matemático y lógico detrás de este agente, definiendo cómo percibe el mundo, qué acciones puede tomar y qué beneficios espera obtener.
+    Este trabajo presenta el desarrollo de un Agente de Aprendizaje por Refuerzo (IA) diseñado para operar en el mercado de criptomonedas. A diferencia de los modelos tradicionales, nuestra propuesta integra el "estado de ánimo" colectivo mediante un índice de sentimiento, permitiendo al agente tomar decisiones más informadas. El objetivo es maximizar la rentabilidad acumulada gestionando el riesgo de forma inteligente. Explicamos paso a paso cómo la IA observa el mercado, elige sus acciones y aprende de sus aciertos y errores.
 \end{abstract}
 
-\section{Problema: Mercado y Datos}
-El desarrollo de este proyecto se centra en optimizar la toma de decisiones en el trading (compra y venta de activos), una tarea compleja debido a la alta volatilidad y el componente emocional de los mercados. Operaremos en el intercambio \textbf{Binance} usando el par \textbf{BNB/USDT} (comprar Binance Coin usando Tether, una "stablecoin" o moneda estable ligada al valor del dólar). 
+\section{Introducción y Objetivo del Agente}
+El mercado de criptomonedas se caracteriza por su alta volatilidad e influencia psicológica. El objetivo principal de nuestro agente es encontrar una política de trading óptima que maximice su **capital final acumulado $(\sum \gamma^t R_t)$**. No buscamos solo ganar dinero rápido, sino aprender a proteger el capital en momentos de incertidumbre y aprovechar las oportunidades de crecimiento, equilibrando el beneficio con la estabilidad.
 
-Para que nuestra IA aprenda, utilizamos dos tipos de información fundamental:
+\section{Configuración de Datos y Entorno}
+Para que nuestra IA aprenda en un entorno realista, hemos definido las siguientes especificaciones técnicas:
 \begin{itemize}
-    \item \textbf{Datos OHLCV (Precios):} Corresponde a los precios de mercado (Apertura, Máximo, Mínimo, Cierre) y Volumen. Los usamos para calcular el \textbf{retorno logarítmico}: $r_t = \log(P_t/P_{t-1})$.
-    \item \textbf{Sentimiento de Mercado:} Integramos índices que miden si los inversores tienen "Miedo" o "Codicia". Esta variable psicológica es vital en el ecosistema cripto.
+    \item \textbf{Activo de Interés:} BNB/USDT (Binance Coin operada contra Tether).
+    \item \textbf{Fuente de Datos:} API de Binance para precios (OHLCV) y \textit{alternative.me} para el sentimiento.
+    \item \textbf{Temporalidad:} Velas de 1 hora (1h). Esta frecuencia permite capturar movimientos intradía sin el ruido excesivo de los minutos.
+    \item \textbf{Periodo de Análisis:} Enero de 2023 a Diciembre de 2024. Este intervalo se eligió por su **relevancia estratégica**, ya que abarca tanto la recuperación post-crisis de 2023 como el ciclo alcista de 2024, ofreciendo una variedad de regímenes de mercado para el entrenamiento del agente.
 \end{itemize}
 
-\subsection{Alternativas para la Fuente de Sentimiento}
-Para medir este componente emocional, planteamos tres posibles fuentes tecnológicas:
-\begin{enumerate}
-    \item \textbf{Redes Sociales Crudas (X y Reddit):} Análisis directo de publicaciones masivas mediante técnicas de Procesamiento de Lenguaje Natural (NLP).
-    \item \textbf{Comunidades Especializadas (Stocktwits):} Plataforma donde los usuarios etiquetan sus mensajes como alcistas o bajistas de forma explícita.
-    \item \textbf{Índices Agregadores (Crypto Fear \& Greed Index):} Valor diario consolidado basado en múltiples indicadores de mercado y redes sociales.
-\end{enumerate}
-
-\section{Espacio de Estados: ¿Qué observa la IA?}
-El "Estado" es la información que la IA procesa antes de decidir qué acción tomar. Definimos el estado $S_t = (M_t, I_t, Sent_t)$:
-\begin{enumerate}
-    \item \textbf{Régimen de Mercado ($M_t$):} Clasificamos el mercado como alcista (\textbf{U}p) o bajista (\textbf{D}own) mediante $r_t > \theta$.
-    \item \textbf{Inventario ($I_t$):} Indica la posición actual del agente ($0$: sin posición, $1$: largo o con el activo comprado). Operamos en el mercado \textbf{Spot} (intercambio real e inmediato de activos).
-    \item \textbf{Sentimiento de Mercado ($Sent_t$):} Nivel de optimismo o pesimismo colectivo.
-\end{enumerate}
-
-\section{Espacio de Acciones y Admisibilidad}
-El agente elige entre $\mathcal{A} = \{Buy, Sell, Hold\}$. La admisibilidad depende de $I_t$:
+\section{Sentimiento de Mercado: El Pulso Emocional}
+Hemos seleccionado el \textbf{Crypto Fear \& Greed Index} como nuestra fuente única de sentimiento. Este índice traduce múltiples indicadores sociales y de mercado en un número de 0 a 100:
 \begin{itemize}
-    \item Si $I_t=0$ (sin activo), puede elegir entre $\{Buy, Hold\}$.
-    \item Si $I_t=1$ (con activo), puede elegir entre $\{Sell, Hold\}$.
+    \item \textbf{0 - 24 (Miedo Extremo):} Posibles oportunidades de compra (mercado infravalorado).
+    \item \textbf{25 - 49 (Miedo):} Cautela general.
+    \item \textbf{50 - 74 (Codicia):} Optimismo creciente.
+    \item \textbf{75 - 100 (Codicia Extrema):} Peligro de corrección (mercado sobrevalorado).
 \end{itemize}
+El agente recibe este valor diariamente y lo alinea con los precios horarios para refinar su toma de decisiones.
 
-\section{Probabilidades de Transición y Estimación}
-Para modelar cómo cambia el mercado, estimamos las probabilidades de transición mediante el **Suavizado de Laplace**, evitando nulidad en eventos no observados:
-\begin{equation}
-    \tilde{\alpha} = \frac{N_{UU} + \kappa}{N_{U \bullet} + 2\kappa}, \quad \tilde{\beta} = \frac{N_{DD} + \kappa}{N_{D \bullet} + 2\kappa}
-\end{equation}
+\section{El Estado: ¿Qué observa la IA? ($S_t$)}
+El "Estado" es la brújula del agente. En cada hora, la IA observa un vector $S_t$ compuesto por:
+\begin{enumerate}
+    \item \textbf{Régimen de Mercado ($M_t$):} ¿El precio está subiendo o bajando respecto a la hora anterior?
+    \item \textbf{Sentimiento ($Sent_t$):} El nivel actual del índice de Miedo y Codicia.
+    \item \textbf{Indicador de 'Cansancio' (RSI):} El Índice de Fuerza Relativa nos dice si el activo está sobrecomprado o sobrevendido.
+    \item \textbf{Inventario ($I_t$):} Una variable binaria (0 si tenemos efectivo, 1 si tenemos el activo).
+\end{enumerate}
 
-\section{Recompensas: Beneficios y Costos}
-La recompensa $R_{t+1}$ se calcula como la ganancia bruta del precio menos los **costos operativos** ($c$), que incluyen comisiones y el \textbf{Spread} (diferencia de precios de ejecución):
+\section{Acciones y Recompensas (Premio y Castigo)}
+El agente puede elegir entre \textbf{Comprar}, \textbf{Vender} o \textbf{Mantener}. Para aprender, recibe una recompensa $R_{t+1}$ calculada bajo tres pilares:
 \begin{equation}
-    R_{t+1} = I_{t+1}r_{t+1} - c|I_{t+1} - I_t|
+    R_{t+1} = \underbrace{I_{t+1}r_{t+1}}_{\text{Ganancia}} - \underbrace{c|I_{t+1} - I_t|}_{\text{Comisiones}} - \underbrace{\lambda \sigma_t}_{\text{Penalización por Riesgo}}
 \end{equation}
-La recompensa esperada pondera los escenarios futuros del mercado mediante la media condicional $\bar{\mu}(m)$:
-\begin{equation}
-    \bar{\mu}(U) = \alpha \mu_U + (1-\alpha) \mu_D, \quad \bar{\mu}(D) = (1-\beta) \mu_U + \beta \mu_D
-\end{equation}
+Donde $c$ representa los costos de transacción y $\lambda \sigma_t$ es un castigo proporcional a la volatilidad ($\sigma$). Esto enseña al agente que las ganancias con alto riesgo son menos valiosas que las ganancias estables.
 
-\section{Metodología de Resolución}
-Para optimizar el comportamiento del agente, aplicamos la **Ecuación de Bellman de Optimalidad**, permitiendo evaluar decisiones no solo por su retorno inmediato, sino por su valor acumulado futuro:
-\begin{equation}
-    v^*(s) = \max_{a} \left[ r(s,a) + \gamma \sum_{s' \in S} P(s'|s,a) v^*(s') \right]
-\end{equation}
+\section{Cerebro de la IA: Q-Learning Tabular}
+Para resolver este problema, utilizamos **Q-Learning**, un algoritmo que crea una "Tabla de Sabiduría" (Q-Table). En esta tabla, el agente anota qué tan buena es cada acción para cada situación posible.
+\begin{itemize}
+    \item \textbf{Aprendizaje:} Si una acción lleva a una buena recompensa, su valor en la tabla aumenta.
+    \item \textbf{Decisión:} Ante una situación nueva, el agente consulta su tabla y elige la acción con el valor más alto acumulado históricamente.
+\end{itemize}
+Este enfoque es ideal para el póster porque permite explicar visualmente cómo la experiencia se convierte en decisiones matemáticas.
 
 \bibliographystyle{plain}
 \begin{thebibliography}{9}
