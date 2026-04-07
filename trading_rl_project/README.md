@@ -1,6 +1,6 @@
 # RL Trading Proyecto: Semillero de Aprendizaje por Refuerzo (Cripto + Sentimiento)
 
-Este repositorio contiene el desarrollo de un agente de **Aprendizaje por Refuerzo (RL)** diseñado para operar en el mercado de **criptodivisas**, específicamente a través de la plataforma **Binance**. El proyecto incorpora un enfoque de **Finanzas Conductuales**, integrando datos tradicionales de mercado con un **Índice de Miedo y Codicia** derivado del sentimiento en redes sociales.
+Este repositorio contiene el desarrollo de un agente de **Aprendizaje por Refuerzo (RL)** diseñado para operar en el mercado de **criptodivisas**, específicamente a través de la plataforma **Binance**. El proyecto incorpora un enfoque de **Finanzas Conductuales**, integrando datos tradicionales de mercado con un **Índice de Miedo y Codicia** colectivo.
 
 ## 👥 Integrantes
 *   **Julian Duarte**
@@ -11,31 +11,37 @@ Este repositorio contiene el desarrollo de un agente de **Aprendizaje por Refuer
 *   Juan Carlos Urueña
 *   Camilo Castillo
 
-## 🎯 Objetivo
-Desarrollar un agente de RL capaz de ejecutar estrategias de compra, venta o mantenimiento en el mercado spot de criptoactivos (foco en el par **BNB/USDT**), validando si la inclusión de métricas de sentimiento colectivo mejora la rentabilidad y la gestión de riesgo frente a modelos puramente técnicos.
+## 🎯 Objetivo Estratégico
+Desarrollar un agente de RL capaz de ejecutar estrategias de compra, venta o mantenimiento en el mercado spot de criptoactivos (**BNB/USDT**), maximizando el **capital final acumulado $(\sum \gamma^t R_t)$** mediante una gestión inteligente del riesgo y el sentimiento del mercado.
 
-## 💡 Justificación: Por qué Cripto y Binance
-1.  **Influencia de la Emoción Colectiva:** Los mercados de criptomonedas son altamente sensibles al sentimiento en redes sociales (FOMO, FUD), lo que los convierte en el escenario ideal para probar el impacto de variables psicológicas en la toma de decisiones.
-2.  **Volatilidad y Liquidez:** La alta volatilidad de activos como BNB ofrece mayores oportunidades de aprendizaje para el agente, mientras que la liquidez de Binance permite simulaciones de ejecución realistas.
-3.  **Operación 24/7:** A diferencia de los mercados tradicionales, el flujo continuo de datos de criptomonedas permite un entrenamiento y validación sin pausas por cierres de mercado.
+## 🛠️ Metodología (MDP Extendido y Resolución)
 
-## 🛠️ Metodología (MDP Extendido)
-El proyecto escala el modelo tradicional integrando una tercera dimensión al estado:
-- **Estados ($S$):** $S_t = (M_t, I_t, Sent_t)$
-    - $M_t$: Régimen de mercado (Basado en retornos logarítmicos).
-    - $I_t$: Posición de inventario (Plano o Largo).
-    - $Sent_t$: Nivel de sentimiento (Fear & Greed Index / Sentimiento en X/Reddit).
-- **Acciones ($A$):** Buy, Sell, Hold (admisibles según inventario).
-- **Entorno:** Implementación personalizada en Python integrada con la API de Binance.
+### 1. El Estado ($S_t$)
+El agente observa un vector compuesto por cuatro dimensiones críticas:
+- **Régimen de Mercado ($M_t$):** Dirección del precio (Alcista / Bajista).
+- **Sentimiento ($Sent_t$):** Nivel emocional del mercado (0-100) vía *Crypto Fear & Greed Index*.
+- **Indicador Técnico (RSI):** Medida de sobrecompra o sobreventa del activo.
+- **Inventario ($I_t$):** Posición actual (0: Efectivo, 1: Activo).
 
-## 📅 Próximos Pasos (Evento del 17 de Abril)
-- [ ] Conexión a la API de Binance para recolección de datos históricos (Klines/Candelas).
-- [ ] Integración de un pipeline de sentimiento (ej: Crypto Fear & Greed API).
-- [ ] Entrenamiento de agentes con algoritmos de Tabular RL y/o Deep RL (DQN).
-- [ ] Comparativa de P&L acumulado frente a la estrategia *Buy & Hold*.
+### 2. Función de Recompensa ($R_{t+1}$)
+La recompensa incentiva las ganancias mientras penaliza los costos y el riesgo:
+$$R_{t+1} = I_{t+1}r_{t+1} - c|I_{t+1} - I_t| - \lambda \sigma_t$$
+*Donde $c$ son comisiones y $\lambda \sigma_t$ es una penalización por volatilidad excesiva.*
+
+### 3. Algoritmo de Resolución
+Utilizamos **Q-Learning Tabular**, un método que permite al agente aprender una "Tabla de Sabiduría" (Q-Table) basada en la experiencia histórica, optimizando sus decisiones a lo largo del tiempo.
+
+## 📅 Datos y Periodo de Análisis
+- **Activo:** BNB/USDT (Binance).
+- **Temporalidad:** 1 hora (1h).
+- **Periodo:** Enero 2023 - Diciembre 2024 (Elegido por su relevancia estratégica y variedad de ciclos).
+- **Fuentes:** API de Binance y alternative.me.
 
 ## 📈 Estructura del Repositorio
 - `trading_rl_project/`
-  - `docs/`: Reporte LaTeX y póster para el encuentro.
-  - `src/`: Entorno Gymnasium y lógica del agente.
-  - `data/`: Datos de Binance y series de tiempo de sentimiento.
+  - `docs/`: Reporte LaTeX detallado y **Plan de Póster**.
+  - `src/`: Lógica del Agente y Entorno de Simulación.
+  - `data/`: Históricos de OHLCV y Sentimiento.
+
+---
+*Este proyecto se presentará en el evento de Semilleros de la Universidad Externado de Colombia.*
