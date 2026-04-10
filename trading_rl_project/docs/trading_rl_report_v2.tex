@@ -1,0 +1,177 @@
+\documentclass[12pt,a4paper]{article}
+
+% --- Paquetes de diseño y fuentes ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish, es-tabla]{babel}
+\usepackage{amsmath, amsfonts, amssymb, amsthm}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{setspace}
+\usepackage{xcolor}
+\usepackage[colorlinks=true, linkcolor=black, urlcolor=black]{hyperref}
+
+% Configuración de márgenes
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\onehalfspacing
+
+% Cabecera y Pie de página
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{\small Semillero de Aprendizaje por Refuerzo}
+\lhead{\small IA para Trading y Sentimiento}
+\cfoot{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Título y Autores
+\title{
+    \vspace{-1cm}
+    \textbf{\Large IA y Emociones: Desarrollo de un Agente de Aprendizaje por Refuerzo para el Mercado de Criptomonedas} \\
+    \vspace{0.5cm}
+    \large Universidad Externado de Colombia \\
+    \text{Ciencia de Datos -- Departamento de Matemáticas}
+}
+\author{
+    \textbf{Julian Duarte} \quad \textbf{Julian Jimenez} \\
+    \medskip
+    \small \textit{Tutores:} \\
+    \small Prof. Julián Fernando Sánchez \quad Prof. Juan Carlos Urueña \quad Prof. Camilo Castillo
+}
+\date{Marzo de 2026}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section{Introducción: ¿Por qué una IA que sienta el mercado?}
+
+El mundo de las \textbf{\hyperlink{glo:cripto}{criptomonedas}} es conocido por ser como una montaña rusa: los precios suben y bajan con muchísima rapidez. Muchas veces, estos cambios no ocurren solo por números, sino por lo que la gente siente: miedo a perder dinero o ganas de ganar mucho rápido. Tradicionalmente, los programas de \textbf{\hyperlink{glo:trading}{trading}} solo miran gráficas y estadísticas, pero olvidan este factor humano que mueve el mercado.
+
+Este proyecto nace con una idea emocionante: crear una Inteligencia Artificial (IA) que no solo mire los precios, sino que también intente entender el "humor" o el estado de ánimo de los inversores. Para esto, utilizamos una técnica llamada **Aprendizaje por Refuerzo**, que básicamente es como entrenar a un agente para que aprenda a base de premios y castigos, justo como cuando le enseñamos un truco a una mascota.
+
+Nuestra IA operará con la moneda de \textbf{\hyperlink{glo:binance}{Binance}} (\textbf{\hyperlink{glo:bnb}{BNB}}) y tendrá un "termómetro de emociones" (el índice de Miedo y Codicia). Lo que queremos lograr es que la IA aprenda a ser precavida cuando todo el mundo tiene miedo y a ser inteligente cuando hay demasiada euforia. Al final del día, el objetivo es que nuestra IA aprenda a tomar las mejores decisiones posibles: cuándo comprar, cuándo vender y cuándo simplemente esperar, buscando siempre proteger el dinero y hacerlo crecer de forma segura.
+
+\section{¿Qué es el Aprendizaje por Refuerzo (RL)?}
+
+Para lograr este objetivo de proteger el dinero y crecer de forma inteligente, necesitamos una herramienta que no solo siga reglas fijas, sino que aprenda de sus propios aciertos y errores. Aquí es donde entra en juego el **Aprendizaje por Refuerzo** (o \textit{Reinforcement Learning}), la tecnología que actúa como el "sistema de aprendizaje" de nuestra IA.
+
+A diferencia de otros tipos de inteligencia artificial que aprenden mirando fotos o ejemplos estáticos, el RL aprende de la **experiencia directa**. Es muy parecido a cómo entrenamos a una mascota: si hace algo bien, recibe un premio; si hace algo mal, no recibe nada o recibe un "castigo".
+
+Para que este proceso ocurra, siempre deben existir cinco piezas fundamentales que interactúan entre sí en un ciclo infinito:
+
+\begin{enumerate}
+    \item \textbf{El \hyperlink{glo:agente}{Agente}:} Es el "cerebro" de la IA, el que toma las decisiones.
+    \item \textbf{El Entorno:} Es el mundo donde vive el \textbf{\hyperlink{glo:agente}{agente}} (en nuestro caso, el mercado de criptomonedas).
+    \item \textbf{El Estado ($S_t$):} Es lo que el \textbf{\hyperlink{glo:agente}{agente}} ve en un momento dado (su tablero de instrumentos).
+    \item \textbf{La Acción ($A_t$):} Es la decisión que toma el \textbf{\hyperlink{glo:agente}{agente}} (Comprar, Vender o Esperar).
+    \item \textbf{La Recompensa ($R_t$):} Es el premio o castigo que recibe el \textbf{\hyperlink{glo:agente}{agente}} por su acción.
+\end{enumerate}
+
+A partir de ahora, exploraremos una a una estas piezas para entender cómo nuestra IA se convirtió en una experta del mercado.
+
+\section{El Agente: Nuestro Trader de Inteligencia Artificial}
+
+En el centro de nuestro proyecto se encuentra el \textbf{\hyperlink{glo:agente}{Agente}}. Si el mercado es el océano, el \textbf{\hyperlink{glo:agente}{Agente}} es el navegante que debe aprender a manejar su barco de inversión. 
+
+A diferencia de un trader humano que puede dejarse llevar por el pánico, nuestro \textbf{\hyperlink{glo:agente}{Agente}} es un algoritmo puramente racional que toma decisiones basadas en la experiencia. Su única misión es aprender una \textbf{\hyperlink{glo:politica}{política óptima}} que le permita maximizar lo que en RL llamamos el \textbf{\hyperlink{glo:return}{\textit{Return}}} o Beneficio Acumulado ($G_t$):
+
+\begin{equation}
+    G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots
+\end{equation}
+
+Esta fórmula, aunque parezca compleja, tiene una lógica muy sencilla:
+\begin{itemize}
+    \item \textbf{$R$ (Recompensa):} Es el valor del premio o castigo que la IA recibe en un momento específico.
+    \item \textbf{$G_t$ (Meta Total):} Es la suma de todos los premios desde ahora hasta el futuro. 
+    \begin{itemize}
+        \item Los numeritos abajo ($t+1, t+2 \dots$) representan el tiempo: la próxima hora, la siguiente, y así sucesivamente.
+        \item ¿Por qué los sumamos? Porque el trading es una carrera de fondo, no una carrera de 100 metros. Sumar los premios permite que la IA sea **estratégica**: a veces, aceptará perder un poquito hoy (un premio negativo en $t+1$) si sabe que eso la llevará a una ganancia gigante en $t+10$. Sin esta suma, la IA sería cobarde y nunca arriesgaría nada para ganar más después.
+    \end{itemize}
+    \item \textbf{$\gamma$ (El Factor de Paciencia):} Es un número entre 0 y 1 que decide qué tanto nos importa el futuro. 
+    \begin{itemize}
+        \item \textbf{¿Qué es?} Técnicamente se llama \textit{factor de descuento}. Imagínalo como un control de "visión estratégica": si $\gamma$ es cercano a 1, la IA tiene una visión de largo alcance y valora mucho los beneficios que llegarán en el futuro. Si es cercano a 0, la IA sufre de una "miopía estratégica" y solo le interesa ganar dinero en la próxima hora, ignorando lo que pase después.
+        \item \textbf{¿Por qué se eleva al cuadrado o al cubo?} Se eleva según el tiempo que falta ($\gamma^2, \gamma^3 \dots$) porque **un premio entre más lejos esté, menos valioso es hoy**. Es como si el premio se fuera "enfriando" con el tiempo. Esto obliga a la IA a ser eficiente: le dice que el futuro importa, pero que no puede quedarse esperando mil años a que pase algo bueno; tiene que actuar para ganar lo más pronto posible.
+    \end{itemize}
+\end{itemize}
+
+\section{El Entorno: ¿Cómo ve la IA el mundo del Mercado?}
+
+Para que nuestra IA aprenda a navegar en las tormentosas aguas de las finanzas, necesita un mapa detallado y ojos que no se distraigan. Este conjunto de información se conoce técnicamente como el \textbf{Entorno de Observación}. Hemos construido este entorno apoyándonos en dos pilares fundamentales que combinan la frialdad de los números con el calor de las emociones humanas:
+
+\begin{itemize}
+    \item \textbf{El Pilar Técnico (\hyperlink{glo:binance}{Binance}):} Operamos con el activo \textbf{BNB/\hyperlink{glo:usdt}{USDT}}. Hemos elegido la \textbf{\hyperlink{glo:api}{API de Binance}} como fuente de precios porque es el estándar global en \textbf{\hyperlink{glo:liquidez}{liquidez}} y \textbf{\hyperlink{glo:precision}{precisión}}. A diferencia de otras fuentes generales, Binance nos entrega datos en "tiempo real" con una \textbf{\hyperlink{glo:vela}{temporalidad de 1 hora}}, el \textbf{\hyperlink{glo:punto}{punto óptimo}} para capturar tendencias reales sin perderse en el \textbf{\hyperlink{glo:volatilidad}{ruido}} de los minutos.
+    
+    \item \textbf{El Pilar Psicológico (Alternative.me):} Integramos el \textbf{\hyperlink{glo:sentiment}{\textit{Crypto Fear \& Greed Index}}}. Esta pieza es vital porque los precios no se mueven solos; se mueven por las decisiones de millones de personas. Sin este pilar, nuestra IA estaría "ciega" ante el pánico o la euforia colectiva. Elegimos a **Alternative.me** como nuestra fuente porque es la más completa: sintetiza en un solo número la volatilidad, el \textbf{\hyperlink{glo:volumen}{volumen}}, las redes sociales, la \textbf{\hyperlink{glo:dominancia}{dominancia}} y Google Trends.
+\end{itemize}
+
+El índice se mide en una escala de 0 a 100 siguiendo la lógica de las "Finanzas Conductuales":
+\begin{itemize}
+    \item \textbf{0 - 24 (Miedo Extremo):} El pánico domina el mercado. Técnicamente, es el ** \hyperlink{glo:trading}{momento de compra} ** ideal porque los precios suelen estar "en oferta".
+    \item \textbf{25 - 49 (Miedo):} Cautela y desconfianza. El Agente suele esperar o comprar con cuidado.
+    \item \textbf{50 - 74 (Codicia):} Optimismo. El mercado tiene fuerza y la gente sigue comprando.
+    \item \textbf{75 - 100 (Codicia Extrema):} Euforia peligrosa. Es el ** \hyperlink{glo:trading}{momento de venta} ** o de proteger ganancias, ya que una caída suele estar cerca.
+\end{itemize}
+
+Finalmente, nuestro laboratorio de pruebas abarca desde **enero de 2023 hasta diciembre de 2024**. Este periodo es perfecto para el entrenamiento, ya que incluye desde las épocas de incertidumbre post-crisis hasta el inicio de \textbf{\hyperlink{glo:alcista}{ciclos alcistas}} masivos, obligando a la IA a ser versátil y resiliente ante cualquier cambio climático en el mercado.
+
+\section{El Estado ($S_t$): El Tablero de Instrumentos de la IA}
+
+Si el mercado es un océano inmenso, nuestra IA no puede verlo todo a la vez. Para tomar decisiones, necesita un resumen de lo que está pasando exactamente en este momento. Este resumen se llama técnicamente \textbf{El Estado} ($S_t$).
+
+Imagina que el **\hyperlink{glo:agente}{Agente}** es el piloto de un avión. No necesita asomarse por la ventana para saber cómo volar; le basta con mirar su tablero de instrumentos. En nuestro proyecto, ese tablero tiene cuatro indicadores fundamentales que forman un vector matemático:
+
+\begin{equation}
+    S_t = \{M_t, RSI_t, Sent_t, I_t\}
+\end{equation}
+
+A continuación, explicamos qué mide cada uno de estos "relojes":
+
+\begin{enumerate}
+    \item \textbf{Régimen de Mercado ($M_t$):} Es el indicador de dirección. Nos dice si el precio en la última hora subió o bajó. Es como saber si el viento sopla a favor o en contra de nuestra posición.
+    \item \textbf{El Termómetro Emocional ($Sent_t$):} Es el valor del \textbf{\hyperlink{glo:sentiment}{Crypto Fear \& Greed Index}} que vimos antes. Le dice a la IA si el resto de los humanos en el mercado están actuando por pánico o por avaricia.
+    \item \textbf{El Medidor de Cansancio (\hyperlink{glo:rsi}{RSI}):} El \textit{Relative Strength Index} es como el **sensor de fatiga** del precio. Imagina a un corredor de maratón: el RSI nos dice si el precio está "fresco" y con energía para subir, o si ya corrió tanto que está a punto de desmayarse (lo que llamamos sobrecompra). Este indicador ayuda a la IA a no comprar cuando el mercado ya está agotado.
+    \item \textbf{El Interruptor de Inventario ($I_t$):} Es la memoria de la IA. Le indica si en este momento tiene dólares (\textbf{\hyperlink{glo:usdt}{USDT}}) en su bolsillo o si ya los gastó comprando \textbf{\hyperlink{glo:bnb}{BNB}}. Sin este "interruptor", la IA podría intentar vender algo que no tiene.
+\end{enumerate}
+
+\textbf{¿Por qué simplificamos los datos? (Discretización):}
+Para que el cerebro de nuestra IA sea eficiente, utilizamos una técnica llamada **\hyperlink{glo:discretizacion}{Discretización}**. 
+
+En el mundo real, el RSI puede ser 45.67, 45.68, etc. Si la IA intentara aprender cada decimal, necesitaría una "tabla de sabiduría" infinita que nunca terminaría de llenar. Para evitar esto, convertimos los números en "cajas" o categorías:
+\begin{itemize}
+    \item En lugar de ver 10.5\%, la IA solo ve: **"Precio Bajando"**.
+    \item En lugar de ver un RSI de 72.4, solo ve: **"Mercado Agotado"**.
+\end{itemize}
+Esto reduce drásticamente la complejidad del problema. Permite que la IA rellene su tabla de aprendizaje mucho más rápido, ya que solo tiene que aprender qué hacer en unas pocas situaciones clave (como "Miedo alto + Precio bajo + Tengo dinero") en lugar de perderse en un mar de decimales sin sentido estratégico.
+
+\section{Glosario: Diccionario para principiantes}
+
+Para que este reporte sea accesible para todos, hemos preparado este glosario con definiciones sencillas de los términos que aparecen en el texto. Puedes hacer clic en las palabras resaltadas en el documento para venir aquí en cualquier momento.
+
+\begin{itemize}
+    \item \hypertarget{glo:agente}{\textbf{Agente:}} Es el cerebro de nuestra IA. Imagínalo como el "jugador" que toma todas las decisiones dentro del mercado basándose en lo que ha aprendido.
+    \item \hypertarget{glo:api}{\textbf{API:}} Es el "puente" de comunicación. Es la herramienta que nos permite conectar nuestro código con Binance para recibir los precios en tiempo real de forma automática.
+    \item \hypertarget{glo:binance}{\textbf{Binance:}} Es la plataforma de intercambio (Exchange) más grande del mundo. Es el escenario donde nuestra IA entra a realizar sus operaciones.
+    \item \hypertarget{glo:bnb}{\textbf{BNB:}} Es la criptomoneda propia de Binance. Es el "producto" que nuestra IA compra y vende para buscar rentabilidad.
+    \item \hypertarget{glo:alcista}{\textbf{Ciclo Alcista:}} Un periodo prolongado donde los precios suben de forma constante. También se conoce como \textit{Bull Market}.
+    \item \hypertarget{glo:cripto}{\textbf{Criptomoneda:}} Dinero digital asegurado por criptografía. No depende de bancos y su valor varía según la oferta y la demanda.
+    \item \hypertarget{glo:sentiment}{\textbf{Crypto Fear \& Greed Index:}} Es un indicador que mide el sentimiento del mercado. Analiza redes sociales y tendencias para decirnos si el ambiente es de pánico o de euforia.
+    \item \hypertarget{glo:discretizacion}{\textbf{Discretización:}} Es el arte de simplificar. En lugar de darle a la IA números infinitos, agrupamos los datos en categorías (como "Barato", "Normal" o "Caro") para que aprenda más rápido.
+    \item \hypertarget{glo:dominancia}{\textbf{Dominancia:}} Es el peso que tiene una moneda frente al mercado total. Nos dice qué tan relevante es un activo en comparación con los demás.
+    \item \hypertarget{glo:liquidez}{\textbf{Liquidez:}} La facilidad de convertir un activo en dinero rápido. Si hay mucha liquidez, puedes vender tus monedas al instante sin que el precio se desplome.
+    \item \hypertarget{glo:politica}{\textbf{Política Óptima:}} Es la estrategia maestra que la IA desarrolla. Es el "manual de instrucciones" que le dice qué hacer en cada situación para ganar lo máximo posible.
+    \item \hypertarget{glo:precision}{\textbf{Precisión:}} La exactitud de los datos. En finanzas, un decimal de más o de menos puede significar la diferencia entre una gran ganancia o una pérdida.
+    \item \hypertarget{glo:punto}{\textbf{Punto Óptimo:}} Es el equilibrio perfecto. En nuestro caso, es la temporalidad que permite ver la tendencia sin distraerse con movimientos pequeños y sin importancia.
+    \item \hypertarget{glo:return}{\textbf{Return (Beneficio):}} Es la ganancia total acumulada que la IA busca conseguir a lo largo del tiempo.
+    \item \hypertarget{glo:rsi}{\textbf{RSI (Fuerza Relativa):}} Es un indicador que mide la "energía" del precio. Nos dice si un activo está sobrecomprado (caro y agotado) o sobrevendido (barato y listo para subir).
+    \item \hypertarget{glo:stablecoin}{\textbf{Stablecoin:}} Monedas digitales (como el \hyperlink{glo:usdt}{USDT}) diseñadas para valer siempre lo mismo que el dólar, sirviendo como refugio contra la volatilidad.
+    \item \hypertarget{glo:trading}{\textbf{Trading:}} La actividad de comprar y vender activos financieros con el objetivo de obtener un beneficio económico.
+    \item \hypertarget{glo:usdt}{\textbf{USDT (Tether):}} Es el "Dólar Digital". Es nuestra unidad de medida para saber exactamente cuánto valen nuestros BNB.
+    \item \hypertarget{glo:vela}{\textbf{Vela (Temporalidad):}} Una forma de agrupar el precio en un bloque de tiempo (1 hora). Muestran el recorrido del precio desde que abre hasta que cierra.
+    \item \hypertarget{glo:volatilidad}{\textbf{Volatilidad:}} La intensidad y rapidez con la que cambian los precios. A mayor volatilidad, las "olas" del mercado son más grandes y arriesgadas.
+    \item \hypertarget{glo:volumen}{\textbf{Volumen:}} La cantidad total de dinero que se movió en el mercado en cierto tiempo. Indica qué tanta fuerza e interés real hay en un movimiento.
+\end{itemize}
+
+\end{document}
