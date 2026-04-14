@@ -1,0 +1,112 @@
+\documentclass[final]{beamer}  
+  \mode<presentation> { \usetheme{ParisSaclay}  }
+  \usepackage[spanish]{babel}
+  \usepackage[utf8]{inputenc}
+  \usepackage{amsmath,amsthm, amssymb, latexsym}
+
+  \boldmath %math en gras
+  \usepackage[orientation=portrait,size=a1,scale=1.4]{beamerposter}
+
+  \usepackage{graphicx}
+  \usepackage{tikz}
+  
+  \title{Integración de sentimiento de mercado en agentes de RL para la optimización de trading}
+  \author{Julian Duarte \quad Julian Jimenez}
+  \institute[]{Ciencia de Datos -- Departamento de Matemáticas \\ \medskip Tutores: Prof. Julián Fernando Sánchez \quad Prof. Juan Carlos Urueña \\ \medskip \textbf{Semillero de Aprendizaje por Refuerzo}}
+
+\begin{document}
+
+\begin{frame} [fragile]{} 
+
+\begin{columns}
+    \begin{column}{.46\textwidth}
+        
+    \begin{block}{1. Introducción: ¿Por qué una IA que sienta el mercado?}
+        El mercado cripto opera como una ``montaña rusa'' impulsada por la psicología colectiva. Sesgos cognitivos como el \textbf{pánico sistémico} o la \textbf{euforia irracional} (FOMO) distorsionan la toma de decisiones, creando ineficiencias críticas.
+        \begin{itemize}
+            \item \textbf{Problema:} La falta de un "termómetro emocional" en los algoritmos convencionales.
+            \item \textbf{Propuesta:} Un agente racional entrenado mediante \textit{RL} para navegar la volatilidad integrando el sentimiento humano.
+        \end{itemize}
+        \centering
+        \vspace{0.3cm}
+        \includegraphics[width=0.85\linewidth]{ciclo_psicologico_mercado.png}
+    \end{block}
+
+    \vspace{0.5cm}
+
+    \begin{block}{2. Objetivos del Proyecto}
+        \begin{itemize}
+            \item \textbf{Política Óptima ($\pi^*$):} Converger a un manual de reglas de decisión que maximice el beneficio acumulado ($G_t$).
+            \item \textbf{Fusión de Datos:} Integrar el índice \textit{Fear \& Greed} como una variable de estado exógena crítica.
+            \item \textbf{Rentabilidad Eficiente:} Priorizar la búsqueda de retornos con baja volatilidad (Sharpe Ratio optimizado).
+        \end{itemize}
+    \end{block}
+
+    \vspace{0.5cm}
+
+    \begin{alertblock}{3. Metodología: El Tablero de Instrumentos}
+        Para decidir, el agente procesa un vector de estado ($S_t$) con cuatro ``sensores'' fundamentales que resumen el entorno:
+        \begin{itemize}
+            \item \textbf{Dirección de Mercado ($M_t$):} Indica el régimen de precio actual (¿el mercado tiene tendencia alcista o bajista?).
+            \item \textbf{Termómetro Emocional ($Sent_t$):} Valor del índice \textit{Fear \& Greed}, que alerta al agente sobre pánicos o euforias colectivas.
+            \item \textbf{Sensor de Fatiga ($RSI_t$):} Indica si el precio está ``agotado'' (sobrecompra o sobreventa), ayudando a evitar entradas tardías.
+            \item \textbf{Memoria de Posición ($I_t$):} Informa al agente si posee activos (BNB) o efectivo (USDT), condicionando sus acciones posibles.
+        \end{itemize}
+        \textbf{Aprendizaje (Q-Learning):}
+        Basándose en estos datos, el agente elige una acción $\{ \text{Compra, Venta, Espera} \}$ y optimiza su política mediante el error de predicción temporal:
+        \[ Q(s, a) \leftarrow Q(s, a) + \alpha [r + \gamma \max_{a'} Q(s', a') - Q(s, a)] \]
+        \centering
+        \vspace{0.3cm}
+        \includegraphics[width=0.85\linewidth]{grafica_montana_rusa.png}
+    \end{alertblock}
+    
+    \end{column}
+
+    \begin{column}{.46\textwidth}	
+
+    \begin{block}{4. Evaluación: Midiendo la sabiduría de la IA}
+        Evaluamos la resiliencia algorítmica mediante métricas estándar de riesgo-retorno:
+        \begin{itemize}
+            \item \textbf{Sharpe Ratio:} Medición de la rentabilidad eficiente (ganar de forma tranquila y constante).
+            \item \textbf{Máximo Drawdown:} El termómetro del "peor momento" para proteger el capital ante caídas abruptas.
+            \item \textbf{Generalización Out-of-Sample:} Validación de la política $\pi$ en periodos de tiempo no vistos durante el entrenamiento.
+        \end{itemize}
+        \centering
+        \vspace{0.3cm}
+        \includegraphics[width=0.85\linewidth]{grafica_comparativa_riesgo.png}
+    \end{block}
+    
+    \vspace{0.5cm}	
+
+    \begin{exampleblock}{5. Conclusiones y Aplicación}
+        La investigación demuestra que una arquitectura resiliente es aquella capaz de interpretar el pulso emocional del mercado. El modelo propuesto actúa como un \textbf{freno racional} teórico ante la impulsividad humana.
+
+        \textbf{Aportes y Proyecciones:}
+        \begin{itemize}
+            \item \textbf{Resiliencia Algorítmica:} La integración de finanzas conductuales permite al agente modelar comportamientos defensivos ante pánicos colectivos.
+            \item \textbf{Soporte de Decisión:} El marco conceptual sirve como base para sistemas que validen la racionalidad de una inversión antes de su ejecución.
+            \item \textbf{Fase de Implementación:} Se proyecta el uso de \textit{Websockets} para la transición de simulaciones hacia entornos de mercado real en Binance.
+            \item \textbf{Escalabilidad:} La metodología es aplicable a la gestión de portafolios multi-activo y al análisis de sentimiento mediante NLP.
+        \end{itemize}
+    \end{exampleblock}
+
+    \vspace{0.5cm}
+
+    \begin{block}{6. Contacto y Referencias}
+        \small
+        Sutton \& Barto (2018). \textit{Reinforcement Learning: An Introduction}. MIT Press.
+        \smallskip
+        \centering
+        \faEnvelope \quad julian.duarte2 / julian.jimenez5 @est.uexternado.edu.co \\
+        \textbf{Semillero de Aprendizaje por Refuerzo - 2026}
+        \vfill
+        \centering
+        \small \textit{Escanea el código QR para acceder al repositorio y documentación completa del proyecto.}
+    \end{block}
+
+    \end{column}
+\end{columns}
+
+\end{frame}
+
+\end{document}

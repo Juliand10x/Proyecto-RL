@@ -1,0 +1,98 @@
+\documentclass[final]{beamer}  
+\mode<presentation> { \usetheme{ParisSaclay} }
+\usepackage[english, spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsthm, amssymb, latexsym}
+
+\boldmath %math en gras
+\usepackage[orientation=portrait,size=a1,scale=1.4]{beamerposter}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+
+% --- Título y Autores Reales ---
+\title{\huge INTEGRACIÓN DE SENTIMIENTO DE MERCADO EN AGENTES DE RL PARA LA OPTIMIZACIÓN DE TRADING}
+\author{Julian Duarte, Julian Jimenez}
+\institute[]{Universidad Externado de Colombia \\ Ciencia de Datos -- Departamento de Matemáticas \\ Semillero de Aprendizaje por Refuerzo \\ \medskip \small Tutores: Prof. Julián Fernando Sánchez \quad Prof. Juan Carlos Urueña}
+
+\begin{document}
+
+\begin{frame} [fragile]{} 
+
+\begin{columns}
+    \begin{column}{.48\textwidth}
+        
+    \begin{block}{1. Introducción y Contexto}
+        El mercado de criptomonedas se caracteriza por una volatilidad extrema impulsada por sesgos cognitivos. La toma de decisiones suele verse afectada por estados emocionales como el pánico o la euforia (FOMO).
+        \begin{itemize}
+            \item \textbf{Problema:} Los modelos tradicionales ignoran el sentimiento colectivo.
+            \item \textbf{Necesidad:} Sistemas racionales que integren indicadores emocionales.
+        \end{itemize}
+    \end{block}
+
+    \vspace{1cm}
+
+    \begin{block}{2. Objetivo(s) del Trabajo}
+        Desarrollar y validar un agente de \textbf{Q-Learning} que ejecute estrategias rentables minimizando sesgos emocionales mediante la incorporación del \textit{Fear \& Greed Index}.
+    \end{block}
+
+    \vspace{1cm}
+
+    \begin{alertblock}{3. Metodología (MDP)}
+        Optimización de una política $\pi$ para maximizar la recompensa acumulada:
+        \begin{description}
+            \item[Estado ($S$):] RSI, Medias Móviles, Sentimiento e Inventario.
+            \item[Acciones ($A$):] $\{ \text{Compra, Venta, Neutro} \}$.
+            \item[Recompensa ($R$):] $R_t = \Delta \text{P\&L} - \text{Comisiones} - \lambda \sigma_t$.
+        \end{description}
+        
+        \centering
+        \vspace{0.5cm}
+        \[ Q(s, a) \leftarrow Q(s, a) + \alpha [r + \gamma \max Q(s', a') - Q(s, a)] \]
+        \vspace{0.5cm}
+        
+        \textbf{[Espacio para Diagrama del Ciclo de RL]}
+    \end{alertblock}
+    
+    \end{column}
+
+    \begin{column}{.48\textwidth}	
+
+    \begin{block}{4. Resultados Esperados y Evaluación}
+        Dado que el proyecto se encuentra en fase de validación técnica:
+        \begin{itemize}
+            \item Se proyecta una reducción de la varianza en la toma de decisiones.
+            \item Mayor resiliencia del capital durante periodos de pánico.
+            \item \textbf{Métricas:} Ratio de Sharpe, Max Drawdown y Profit Factor.
+        \end{itemize}
+        
+        \centering
+        \vspace{1cm}
+        \includegraphics[width=.8\textwidth]{example-image} 	
+        \captionof{figure}{Simulación Hipotética de Rendimiento}
+    \end{block}
+    
+    \vspace{1cm}	
+
+    \begin{exampleblock}{5. Conclusiones y Aplicación}
+        La integración de finanzas conductuales en agentes autónomos permite una gestión de riesgo más robusta, sentando bases para sistemas de ahorro inteligente resilientes a crisis financieras.
+    \end{exampleblock}
+
+    \vspace{1cm}
+
+    \begin{block}{6. Referencias y Contacto}
+        \begin{enumerate}
+            \item Sutton \& Barto, \textit{Reinforcement Learning: An Introduction}, MIT Press.
+            \item Alternative.me, \textit{Crypto Fear \& Greed Index API}.
+        \end{enumerate}
+        \centering
+        \vspace{0.5cm}
+        \textbf{Contacto:} julian.duarte@uexternado.edu.co
+    \end{block}
+
+    \end{column}
+\end{columns}
+
+\end{frame}
+
+\end{document}

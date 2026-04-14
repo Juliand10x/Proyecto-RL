@@ -1,0 +1,105 @@
+\documentclass[12pt, a4paper]{article}
+
+% --- Paquetes ---
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{titlesec}
+
+% --- Configuración de Página ---
+\geometry{top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm}
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{Planificación del Póster Académico}
+\rhead{Ciencia de Datos - Externado}
+\cfoot{\thepage}
+
+% Estilos de Título
+\titleformat{\section}{\large\bfseries\color{darkgray}}{}{0em}{}[\titlerule]
+
+% --- Título del Documento ---
+\title{Estructura y Planificación para el Póster de Investigación \\ \large ``Integración de sentimiento de mercado en agentes de RL para la optimización de trading''}
+\author{Julian Duarte \quad Julian Jimenez}
+\date{Abril 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Información General del Proyecto}
+\begin{itemize}
+    \item \textbf{Título}: Integración de sentimiento de mercado en agentes de RL para la optimización de trading.
+    \item \textbf{Autores}: Julian Duarte, Julian Jimenez.
+    \item \textbf{Tutores}: Prof. Julián Fernando Sánchez, Prof. Juan Carlos Urueña.
+    \item \textbf{Semillero}: Semillero de Aprendizaje por Refuerzo.
+    \item \textbf{Afiliación}: Universidad Externado de Colombia, Departamento de Matemáticas.
+\end{itemize}
+
+\section{Lineamientos Generales del Póster}
+
+\begin{itemize}
+    \item \textbf{Extensión Total:} Máximo entre 800 y 1,000 palabras para garantizar legibilidad y balance visual.
+    \item \textbf{Tipografía (Mínimos):}
+        \begin{itemize}
+            \item Cuerpo de texto: $\ge$ 24 pt.
+            \item Títulos de sección: $\ge$ 48 - 54 pt.
+            \item Título principal: $\ge$ 80 - 120 pt.
+            \item Estilo: Sans-serif (ej. Arial, Montserrat, Calibri).
+        \end{itemize}
+    \item \textbf{Lenguaje:} Académico, preciso y sobrio. Evitar metáforas innecesarias o lenguaje comercial.
+    \item \textbf{Balance Visual:}
+        \begin{itemize}
+            \item 40-50\%: Gráficos, esquemas y diagramas.
+            \item 20-30\%: Texto descriptivo.
+            \item 25\%: Espacio en blanco (márgenes y separación entre bloques).
+        \end{itemize}
+    \item \textbf{Calidad de Imagen:} Resolución mínima de 300 dpi para impresión en gran formato.
+\end{itemize}
+
+\section{Contenido y Descripción por Secciones}
+
+\subsection{1. Introducción y Contexto}
+\textbf{Guía Científica:} Presentar el ``gancho''. Debe responder a ¿qué se está estudiando?, ¿por qué es importante? y ¿cuál es el vacío de conocimiento?
+\begin{itemize}
+    \item \textbf{Tono:} Conciso y motivador. Máximo 100-150 palabras.
+    \item \textbf{Visual:} Imagen representativa de la volatilidad o psicología de mercado.
+    \item \textbf{Contenido:} [Problema de los sesgos emocionales en el trading minorista de criptomonedas].
+\end{itemize}
+
+\subsection{2. Objetivo(s)}
+\textbf{Guía Científica:} Declaración directa de lo que se espera lograr usando verbos en infinitivo.
+\begin{itemize}
+    \item \textbf{Tono:} Directo y puntual.
+    \item \textbf{Visual:} Uso de viñetas claras.
+    \item \textbf{Contenido:} [Desarrollar y validar teóricamente un agente de Q-Learning que integre el Fear \& Greed Index].
+\end{itemize}
+
+\subsection{3. Metodología (MDP)}
+\textbf{Guía Científica:} Visión general del diseño y las herramientas (Binance API, Alternative.me API).
+\begin{itemize}
+    \item \textbf{Tono:} Técnico-pedagógico.
+    \item \textbf{Visual:} **DIAGRAMAS TÉCNICOS:** Ciclo de RL, Vector de Estado discretizado y Función de Recompensa penalizada por riesgo.
+    \item \textbf{Contenido:} [Formulación matemática del MDP y lógica de actualización del Q-Value].
+\end{itemize}
+
+\subsection{4. Resultados Esperados y Evaluación (Fase Teórica)}
+\textbf{Guía Científica:} Dado que el proyecto está en fase de validación teórica, se deben proyectar los hallazgos y definir las métricas de éxito.
+\begin{itemize}
+    \item \textbf{Tono:} Prospectivo y riguroso. "Se espera que...", "El modelo será evaluado mediante...".
+    \item \textbf{Visual:} Mock-ups de gráficas de rendimiento esperadas (ej. Sharpe Ratio estimado), tablas de métricas de riesgo (Drawdown) y comparativa hipotética vs. estrategia pasiva.
+    \item \textbf{Contenido:} [Criterios de validación: Ratio de Sharpe, Máximo Drawdown y Resiliencia en periodos de pánico colectivo].
+\end{itemize}
+
+\subsection{5. Conclusiones y Aplicación}
+\textbf{Guía Científica:} Interpretar los alcances teóricos y proponer proyecciones (fase de implementación real).
+\begin{itemize}
+    \item \textbf{Tono:} Reflexivo.
+    \item \textbf{Visual:} Lista de "Puntos clave" del aporte de la investigación.
+    \item \textbf{Contenido:} [Impacto de las finanzas conductuales en la automatización del trading].
+\end{itemize}
+
+\end{document}
