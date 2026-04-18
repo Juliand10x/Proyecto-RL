@@ -50,11 +50,11 @@
 
 \section{Introducción: ¿Por qué una IA que sienta el mercado?}
 
-El mundo de las \textbf{criptomonedas}\footnote{Activos digitales descentralizados cuya volatilidad genera riesgos y oportunidades de inversión.} es conocido por ser como una montaña rusa. Muchas veces, estos cambios no ocurren solo por números, sino por el factor humano. Tradicionalmente, los programas de \textbf{trading}\footnote{Negociación estratégica de activos financieros para obtener rentabilidad.} solo miran estadísticas, pero olvidan el sentimiento que mueve el mercado.
+El mundo de las \textbf{criptomonedas} es conocido por ser como una montaña rusa. Muchas veces, estos cambios no ocurren solo por números, sino por el factor humano. Tradicionalmente, los programas de \textbf{trading} solo miran estadísticas, pero olvidan el sentimiento que mueve el mercado.
 
-Este proyecto propone crear una Inteligencia Artificial (IA) que integre la psicología del mercado mediante el \textbf{Aprendizaje por Refuerzo}\footnote{Rama de la IA donde un agente aprende a tomar decisiones mediante un sistema de premios y castigos.}, entrenando al agente para reaccionar ante el pánico o la euforia colectiva.
+Este proyecto propone crear una Inteligencia Artificial (IA) que integre la psicología del mercado mediante el \textbf{Aprendizaje por Refuerzo}, entrenando al agente para reaccionar ante el pánico o la euforia colectiva.
 
-Nuestra IA operará con la moneda de \textbf{Binance}\footnote{Ecosistema global que actúa como el entorno de operación para nuestro agente.} (\textbf{BNB}\footnote{Activo nativo de Binance utilizado como instrumento principal de inversión.}) y un índice de Miedo y Codicia. El objetivo es que la IA aprenda a ser precavida cuando hay pánico y estratégica cuando hay euforia, buscando un crecimiento seguro del capital.
+Nuestra IA operará con la moneda de \textbf{Binance} (\textbf{BNB}) y un índice de Miedo y Codicia. El objetivo es que la IA aprenda a ser precavida cuando hay pánico y estratégica cuando hay euforia, buscando un crecimiento seguro del capital.
 
 \section{¿Qué es el Aprendizaje por Refuerzo (RL)?}
 
@@ -65,20 +65,20 @@ A diferencia de otros tipos de inteligencia artificial que aprenden mirando foto
 Para que este proceso ocurra, siempre deben existir cinco piezas fundamentales que interactúan entre sí en un ciclo infinito:
 
 \begin{enumerate}
-    \item \textbf{El Agente}\footnote{Es el componente de Inteligencia Artificial que actúa como el ``sujeto'' del aprendizaje. Es el cerebro que observa el mercado, evalúa el riesgo y toma decisiones basándose en una estrategia que perfecciona a través de la experiencia.}\textbf{:} Es el ``cerebro'' de la IA, el que toma las decisiones.
+    \item \textbf{El Agente}\textbf{:} Es el ``cerebro'' de la IA, el que toma las decisiones.
     \item \textbf{El Entorno:} Es el mundo donde vive el agente (en nuestro caso, el mercado de criptomonedas).
     \item \textbf{El Estado ($S_t$):} Es lo que el agente ve en un momento dado (su tablero de instrumentos).
-    \item \textbf{La Acción}\footnote{Se refiere a cada una de las decisiones que el agente puede ejecutar en un momento determinado. En nuestro caso, el agente elige cada hora entre Comprar, Vender o Esperar (no hacer nada), buscando siempre la opción que maximice su beneficio a largo plazo.}\textbf{:} Es la decisión que toma el agente (Comprar, Vender o Esperar).
+    \item \textbf{La Acción}\textbf{:} Es la decisión que toma el agente (Comprar, Vender o Esperar).
     \item \textbf{La Recompensa ($R_t$):} Es el premio o castigo que recibe el agente por su acción.
 \end{enumerate}
 
-A partir de ahora, exploraremos una a una estas piezas para entender cómo nuestra IA se convirtió en una experta del mercado bajo el marco de un \textbf{Proceso de Decisión de Markov}\footnote{Es el marco conceptual que define cómo un agente interactúa con su entorno basándose en la idea de que el futuro solo depende del estado actual.} \textbf{(MDP)}.
+A partir de ahora, exploraremos una a una estas piezas para entender cómo nuestra IA se convirtió en una experta del mercado bajo un modelo donde el futuro solo depende del estado actual; esto es conocido como \textbf{Proceso de Decisión de Markov (MDP)}.
 
 \section{El Agente: Nuestro Trader de Inteligencia Artificial}
 
 En el centro de nuestro proyecto se encuentra el Agente. Si el mercado es el océano, el Agente es el navegante que debe aprender a manejar su barco de inversión. 
 
-A diferencia de un trader humano que puede dejarse llevar por el pánico, nuestro Agente es un algoritmo puramente racional que toma decisiones basadas en la experiencia. Su única misión es aprender una \textbf{política óptima}\footnote{Es el conjunto de reglas o ``manual de conducta'' definitivo que el agente desarrolla para saber exactamente qué acción tomar en cada situación posible para ganar.} que le permita maximizar lo que en RL llamamos el \textbf{Return}\footnote{Es la suma total de todas las recompensas acumuladas por el agente a lo largo de su vida, siendo el valor final que la IA intenta maximizar.} o Beneficio Acumulado ($G_t$):
+A diferencia de un trader humano que puede dejarse llevar por el pánico, nuestro Agente es un algoritmo puramente racional que toma decisiones basadas en la experiencia. Su única misión es aprender una \textbf{política óptima}\footnote{Es el conjunto de reglas o ``manual de conducta'' definitivo que el agente desarrolla para saber exactamente qué acción tomar en cada situación posible para ganar.} que le permita maximizar lo que en RL llamamos el \textbf{Return} o \textbf{Beneficio Acumulado}\footnote{Es la suma total de todas las recompensas acumuladas por el agente a lo largo de su vida, siendo el valor final que la IA intenta maximizar.} ($G_t$):
 
 \begin{equation}
     G_t = R_{t+1} + \gamma R_{t+2} + \gamma^2 R_{t+3} + \dots
@@ -86,15 +86,12 @@ A diferencia de un trader humano que puede dejarse llevar por el pánico, nuestr
 
 Esta fórmula, aunque parezca compleja, tiene una lógica muy sencilla:
 \begin{itemize}
+    \item \textbf{$G_t$ (Meta Total):} Es la suma de todos los premios desde ahora hasta el futuro. ¿Por qué los sumamos? Porque el trading es una carrera de fondo, no una carrera de 100 metros. Sumar los premios permite que la IA sea estratégica: a veces, aceptará perder un poquito hoy si sabe que eso la llevará a una ganancia gigante más adelante; sin esta suma, con una mentalidad a corto plazo, la IA nunca arriesgaría nada para ganar más después.
     \item \textbf{$R$ (Recompensa):} Es el valor del premio o castigo que la IA recibe en un momento específico.
-    \item \textbf{$G_t$ (Meta Total):} Es la suma de todos los premios desde ahora hasta el futuro. 
-    \begin{itemize}
-        \item Los numeritos abajo ($t+1, t+2 \dots$) representan el tiempo: la próxima hora, la siguiente, y así sucesivamente.
-        \item ¿Por qué los sumamos? Porque el trading es una carrera de fondo, no una carrera de 100 metros. Sumar los premios permite que la IA sea estratégica: a veces, aceptará perder un poquito hoy (un premio negativo en $t+1$) si sabe que eso la llevará a una ganancia gigante en $t+10$. Sin esta suma, la IA sería cobarde y nunca arriesgaría nada para ganar más después.
-    \end{itemize}
+    \item \textbf{Los numeritos abajo ($t+1, t+2 \dots$):} Representan el tiempo: la próxima hora, la siguiente, y así sucesivamente. Nos dicen en qué momento exacto del futuro se recibirá cada premio.
     \item \textbf{$\gamma$ (El Factor de Paciencia):} Es un número entre 0 y 1 que decide qué tanto nos importa el futuro. 
     \begin{itemize}
-        \item \textbf{¿Qué es?} Técnicamente se llama \textbf{factor de descuento}\footnote{Es un parámetro que ajusta qué tanta importancia le da el agente a las recompensas futuras comparadas con las actuales, definiendo su visión estratégica.}. Imagínalo como un control de ``visión estratégica'': si $\gamma$ es cercano a 1, la IA tiene una visión de largo alcance y valora mucho los beneficios que llegarán en el futuro. Si es cercano a 0, la IA sufre de una ``miopía estratégica'' y solo le interesa ganar dinero en la próxima hora, ignorando lo que pase después.
+        \item \textbf{¿Qué es?} Técnicamente se llama \textbf{factor de descuento}. Imagínalo como un control de ``visión estratégica'': si $\gamma$ es cercano a 1, la IA tiene una visión de largo alcance y valora mucho los beneficios que llegarán en el futuro. Si es cercano a 0, la IA sufre de una ``miopía estratégica'' y solo le interesa ganar dinero en la próxima hora, ignorando lo que pase después.
         \item \textbf{¿Por qué se eleva al cuadrado o al cubo?} Se eleva según el tiempo que falta ($\gamma^2, \gamma^3 \dots$) porque \textbf{un premio entre más lejos esté, menos valioso es hoy}. Es como si el premio se fuera ``enfriando'' con el tiempo. Esto obliga a la IA a ser eficiente: le dice que el futuro importa, pero que no puede quedarse esperando mil años a que pase algo bueno; tiene que actuar para ganar lo más pronto posible.
     \end{itemize}
 \end{itemize}
@@ -104,11 +101,11 @@ Esta fórmula, aunque parezca compleja, tiene una lógica muy sencilla:
 Para que nuestra IA aprenda a navegar en las finanzas, necesita un conjunto de información técnica y emocional conocido como el \textbf{Entorno de Observación}\footnote{Conjunto de variables que definen el mundo observable por la IA.}. Hemos construido este entorno sobre dos pilares:
 
 \begin{itemize}
-    \item \textbf{El Pilar Técnico (Binance):} Operamos \textbf{BNB} frente a \textbf{USDT}\footnote{Moneda estable (1:1 con dólar) utilizada como unidad de medida de rentabilidad.}. Elegimos la temporalidad de \textbf{1 hora} mediante la \textbf{vela horaria}\footnote{Representación gráfica del precio (apertura, cierre, máximos y mínimos) en intervalos de 60 minutos.} por ser el punto óptimo entre reactividad y reducción de ruido.
+    \item \textbf{El Pilar Técnico (Binance):} Operamos \textbf{BNB} frente a \textbf{USDT}\footnote{Moneda estable (1:1 con dólar) utilizada como unidad de medida de rentabilidad.}. Elegimos la temporalidad de \textbf{1 hora} mediante la \textbf{vela horaria}\footnote{Representación gráfica del precio (apertura, cierre, máximos y mínimos) en intervalos de 60 minutos.} porque representa el ``punto de equilibrio'' estratégico: una temporalidad menor (como 1 o 5 minutos) saturaría a nuestra IA con \textit{ruido blanco} ---fluctuaciones insignificantes que no reflejan sentimientos reales---, mientras que una periodicidad diaria nos haría ignorar cambios críticos que en cripto ocurren en cuestión de horas. La hora es la medida ideal para que el agente reconozca tendencias emocionales sólidas y actúe con la agilidad necesaria.
     
-    \item \textbf{El Pilar de Datos:} La \textbf{API de Binance}\footnote{Protocolo de comunicación para recibir datos y ejecutar órdenes en tiempo real.} nos provee datos con alta \textbf{liquidez}\footnote{Facilidad para operar un activo sin afectar drásticamente su precio.}, garantizando que las decisiones de la IA sean ejecutables, considerando siempre la \textbf{volatilidad}\footnote{Medida de variación del precio; indica riesgo y oportunidad.} del mercado.
+    \item \textbf{El Pilar de Datos:} La \textbf{API de Binance}\footnote{Es el ``puente'' de comunicación que permite que nuestro programa se conecte con el mercado para obtener datos y enviar órdenes de forma automática.} nos provee datos con alta \textbf{liquidez}\footnote{Es la facilidad para comprar o vender un activo rápido y al precio actual, sin que nuestra operación mueva el mercado de forma brusca.}, garantizando que las decisiones de la IA sean ejecutables, considerando siempre la \textbf{volatilidad}\footnote{Medida de variación del precio; indica riesgo y oportunidad.} del mercado.
 
-    \item \textbf{El Pilar Psicológico (\textbf{Alternative.me}\footnote{Plataforma de análisis de datos especializada en métricas del ecosistema criptográfico.}):} Integramos el \textbf{Crypto Fear \& Greed}\footnote{Indicador psicométrico (0-100) que cuantifica el sentimiento emocional del mercado.} Index. Esta fuente sintetiza volatilidad, redes sociales y tendencias de búsqueda en un solo indicador emocional.
+    \item \textbf{El Pilar Psicológico:} Utilizamos los datos de \textbf{Alternative.me}, una plataforma líder en análisis de sentimiento que procesa el pulso emocional del mercado cripto. Integramos su \textbf{Crypto Fear \& Greed}\footnote{Indicador psicométrico (0-100) que cuantifica el sentimiento emocional del mercado.} Index, el cual sintetiza diariamente múltiples fuentes de información: volatilidad técnica, impulso de volumen, actividad en redes sociales (como Twitter y Reddit), el dominio de Bitcoin y tendencias de búsqueda en Google. Esta integración permite que el agente no solo reaccione a precios, sino que comprenda la psicología colectiva que precede a los grandes movimientos del mercado.
 \end{itemize}
 
 El índice se mide en una escala de 0 a 100 siguiendo la lógica de las \textbf{Finanzas Conductuales}\footnote{Disciplina que estudia cómo los sesgos emocionales afectan el comportamiento de los mercados.}:
@@ -121,7 +118,7 @@ El índice se mide en una escala de 0 a 100 siguiendo la lógica de las \textbf{
 
 \subsection{El Poder del NLP frente a lo Determinista}
 
-Una pregunta clave es: ¿por qué usar Procesamiento de Lenguaje Natural (NLP) para el sentimiento en lugar de un indicador matemático tradicional? La respuesta reside en la naturaleza del mercado. Los indicadores técnicos (como medias móviles) son \textbf{deterministas}: se basan en fórmulas fijas que solo miran lo que ya pasó con el precio.
+Una pregunta clave es: ¿por qué usar \textbf{Procesamiento de Lenguaje Natural}\footnote{Rama de la inteligencia artificial que se encarga de procesar y derivar significado del lenguaje humano para que las máquinas puedan entender el contexto y sentimiento tras las palabras.} \textbf{(NLP)} para el sentimiento en lugar de un indicador matemático tradicional? La respuesta reside en la naturaleza del mercado. Las métricas de análisis técnico convencional ---como las medias móviles--- son por naturaleza \textbf{deterministas}\footnote{Se refiere a modelos que arrojan siempre el mismo resultado para una entrada dada según reglas fijas, ignorando variables externas o cambios en el comportamiento humano.}: dependen de fórmulas matemáticas rígidas que solo procesan datos históricos, sin capacidad para interpretar el contexto emocional del momento.
 
 El NLP, por el contrario, nos permite capturar la \textbf{causalidad emocional}. Al analizar el lenguaje en redes sociales y noticias, nuestra fuente (Alternative.me) detecta la intención y el miedo de los inversores antes de que estos ejecuten sus órdenes. Integrar este proceso no determinista en el estado del agente le otorga una "ventaja competitiva" psicológica, permitiéndole entender no solo \textit{qué} está pasando, sino \textit{por qué} está pasando.
 
